@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Create Patient</title>
+    <title>Create Doctor</title>
 </head>
 <body>
-    <h2>Create Patient</h2>
-    <form id="createPatientForm">
+    <h2>Create Doctor</h2>
+    <form id="createDoctorForm">
         <label for="name">Name:</label>
         <input type="text" id="name" required>
         <br><br>
@@ -15,39 +15,27 @@
         <label for="password">Password:</label>
         <input type="password" id="password" required>
         <br><br>
-        <label for="weight">Weight:</label>
-        <input type="text" id="weight" required>
+        <label for="specialization">Specialization:</label>
+        <input type="text" id="specialization" required>
         <br><br>
-        <label for="height">Height:</label>
-        <input type="text" id="height" required>
+        <label for="experience">Experience:</label>
+        <input type="text" id="experience" required>
         <br><br>
-        <label for="gender">Gender:</label>
-        <input type="text" id="gender" required>
-        <br><br>
-        <label for="age">Age:</label>
-        <input type="text" id="age" required>
-        <br><br>
-        <label for="medical_history">Medical History:</label>
-        <textarea id="medical_history" required></textarea>
-        <br><br>
-        <button type="submit" onclick="createPatient()">Submit</button>
+        <button type="submit" onclick="createDoctor()">Submit</button>
         <br><br>
         <button type="submit" onclick="backLogin()">Home</button>
     </form>
 
     <script>
-        function createPatient() {
+        function createDoctor() {
             var name = document.getElementById('name').value;
             var email = document.getElementById('email').value;
             var password = document.getElementById('password').value;
-            var weight = document.getElementById('weight').value;
-            var height = document.getElementById('height').value;
-            var gender = document.getElementById('gender').value;
-            var age = document.getElementById('age').value;
-            var medical_history = document.getElementById('medical_history').value;
+            var specialization = document.getElementById('specialization').value;
+            var experience = document.getElementById('experience').value;
 
             // Perform create-patient request using fetch or other methods
-            fetch('/create-patient', {
+            fetch('/create-doctor', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -56,11 +44,8 @@
                     "name": name,
                     "email": email,
                     "password": password,
-                    "weight": weight,
-                    "height": height,
-                    "gender": gender,
-                    "age": age,
-                    "medical_history": medical_history
+                    "specialization": specialization,
+                    "experience": experience
                 })
             })
             .then(response => response.text())

@@ -15,7 +15,7 @@ class Doctor:
         self.conn.commit()
 
     def create(self, name, email, hash, specialization, experience):
-        self.cur.execute('INSERT INTO doctors VALUES (?,?,?,?)', (email, hash, name, specialization, experience, ""))
+        self.cur.execute('INSERT INTO doctors VALUES (?,?,?,?,?,?)', (email, hash, name, specialization, experience, ""))
         self.conn.commit()
 
 
@@ -103,3 +103,16 @@ class Doctor:
         except sqlite3.Error as error:
             print(error)
             return str(error)
+        
+    def viewprofile(self, doc_email):
+        self.cur.execute('SELECT * FROM doctors WHERE email = ?', (doc_email,))
+        doctor_data = self.cur.fetchone()
+        if doctor_data:
+            result = {}
+            result['name'] = doctor_data[0]
+            result['email'] = doctor_data[2]
+            result['specialization'] = doctor_data[3]
+            result['experience'] = doctor_data[4]
+            return result
+        else:
+            return []

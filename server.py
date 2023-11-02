@@ -6,23 +6,25 @@ import models.doctor as doctor
 from models.patient import Patient
 import models.medicine as medicine
 from models.doctor import Doctor
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 app = Flask(__name__)
-
+app.secret_key = "Anchis19cbcj7"
 # ---------------------------------- Login Section ------------------------------------------
 
 @app.route('/')
-def login_page():
-    return render_template('login.html')
+def index():
+    return render_template('index.html')
+
+@app.route('/login-patient', methods=['GET'])
+def login_pat():
+    return render_template('login_pat.html')
 
 @app.route('/login-patient', methods=['POST'])
 def login():
-    print()
     user_data = request.get_json()
     email = user_data['email']
     password = user_data['password']
-    print(email, password)
     login = Patient().login(email, password.encode('utf-8'))
     if(login == None):
         return "No user exists"
@@ -30,7 +32,11 @@ def login():
         return "Wrong password"
     else:
         session['auth'] = email
-        return "logged in"
+        return redirect(url_for('afterpatlogin'))
+
+@app.route('/login-doctor', methods=['GET'])
+def login_doc():
+    return render_template('login_doc.html')
 
 @app.route('/login-doctor', methods=['POST'])
 def logindoctor():
@@ -44,8 +50,12 @@ def logindoctor():
         return "Wrong password"
     else:
         session['auth'] = email
-        return "logged in"
-    
+        return redirect(url_for('afterdoclogin'))
+
+
+@app.route('/create-patient', methods=['GET'])
+def create_patient_form():
+    return render_template('create-patient.html')
 
 @app.route('/create-patient', methods=['POST'])
 def createpatientfront():
@@ -68,17 +78,23 @@ def createpatientfront():
             return "User exists"
         else:
             return "User with email " + email + " created"
+        
+    
+@app.route('/create-doctor', methods=['GET'])
+def create_doctor_form():
+    return render_template('create-doctor.html')
 
 @app.route('/create-doctor', methods=['POST'])
 def createdocfront():
     doc_data = request.get_json()
     email = doc_data['email']
     password = doc_data['password']
+    hashed_pass = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     name = doc_data['name']
     specialization = doc_data['specialization']
     experience = doc_data['experience']
     try:
-        Doctor().create(name, email, password, specialization, experience)
+        Doctor().create(name, email, hashed_pass, specialization, experience)
         return "done"
     except sqlite3.Error as error:
         if 'UNIQUE constraint failed' in str(error):
@@ -88,15 +104,17 @@ def createdocfront():
     
 # --------------------------------- Patient Components -------------------------------------------
 
-
-@app.route('/create-patient', methods=['GET'])
-def create_patient_form():
-    return render_template('create-patient.html')
-
+@app.route('/patient-info', methods=['GET'])
+def afterpatlogin():
+    if 'auth' in session:
+        email = session['auth']
+        patient_details = Patient().viewprofile(email)
+        return render_template('view_pat_profile.html', patient_details=patient_details)
+    else:
+        return "User not logged in"
 
 @app.route('/get-doctor-list', methods=['GET'])
 def getdocforspecialization():
-    print(request)
     req_data = request.get_json()
     first_name = req_data['first_name']
     last_name = req_data['last_name']
@@ -116,6 +134,16 @@ def adddoctor():
     
 
 # --------------------------------- Doctor Components -------------------------------------------
+
+@app.route('/doctor-info', methods=['GET'])
+def afterdoclogin():
+    if 'auth' in session:
+        email = session['auth']
+        doctor_details = Doctor().viewprofile(email)
+        print(doctor_details)
+        return render_template('view_doc_profile.html', doctor_details=doctor_details)
+    else:
+        return "User not logged in"
 
 @app.route('/edit-patient-doc', methods=['PATCH'])
 def editpatientdoc():

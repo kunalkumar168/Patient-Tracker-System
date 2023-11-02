@@ -1,7 +1,7 @@
 import sqlite3
 from flask import *
 import bcrypt
-from models import doctor
+from models.doctor import Doctor
 
 medications = []
 #creates the patient
@@ -16,7 +16,7 @@ class Patient:
         self.conn.commit()
 
     def create(self, name, email, hashed_password, weight, height, age, gender, medical_history):
-        self.cur.execute('INSERT INTO patients VALUES (?,?,?,?,?,?,?,?,?,?)', (name, email, hashed_password, weight, height, age, gender, medical_history, ""))
+        self.cur.execute('INSERT INTO patients VALUES (?,?,?,?,?,?,?,?,?)', (name, email, hashed_password, weight, height, age, gender, medical_history, ""))
         self.conn.commit()
 
 
@@ -44,5 +44,24 @@ class Patient:
             doctors_and_meds.append({doctor_email,[]})
             self.cur.execute('UPDATE patients SET doctor_and_medicines = ? WHERE email = ?', (json.dumps(doctors_and_meds), pat_email,))
             self.conn.commit()
-            result = doctor.addpatient(doctor_email, pat_email)
+            result = Doctor().addpatient(doctor_email, pat_email)
             return result
+        
+    def viewprofile(self, pat_email):
+        pat_email = session['auth']
+        self.cur.execute('SELECT * FROM patients WHERE email = ?', (pat_email,))
+        patient_data = self.cur.fetchone()
+
+        if patient_data:
+            result = {}
+            result['name'] = patient_data[0]
+            result['email'] = patient_data[1]
+            result['weight'] = patient_data[3]
+            result['height'] = patient_data[4]
+            result['age'] = patient_data[5]
+            result['gender'] = patient_data[6]
+            result['medical_history'] = patient_data[7]
+
+            return result
+        else:
+            return []

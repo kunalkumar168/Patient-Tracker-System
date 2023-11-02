@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Home Page</title>
+</head>
+<body>
+<h2>Welcome to Patient Tracker App</h2>
+<br>
+
+<!-- Dropdown menu for login options -->
+<label for="loginOption">Login:</label>
+<select id="loginOption" onchange="handleLoginOption()">
+  <option value="">Select Login Type</option>
+  <option value="{{ url_for('login_pat') }}">Patient</option>
+  <option value="{{ url_for('login_doc') }}">Doctor</option>
+</select>
+<br><br>
+
+<!-- Dropdown menu for registration options -->
+<label for="registerOption">Register:</label>
+<select id="registerOption" onchange="handleRegisterOption()">
+  <option value="">Select Register Type</option>
+  <option value="{{ url_for('create_patient_form') }}">Patient</option>
+  <option value="{{ url_for('create_doctor_form') }}">Doctor</option>
+</select>
+<br><br>
+
+<script>
+  function handleLoginOption() {
+    var loginOption = document.getElementById("loginOption").value;
+    if (loginOption) {
+      window.location.href = loginOption;
+    }
+  }
+
+  function handleRegisterOption() {
+    var registerOption = document.getElementById("registerOption").value;
+    if (registerOption) {
+      window.location.href = registerOption;
+    }
+  }
+</script>
+<br><br>
+<footer>Team : EliteKoders</footer>
+</body>
+</html>

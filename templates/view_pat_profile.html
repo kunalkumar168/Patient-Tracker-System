@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Information</title>
+    <style>
+        .info-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        .info-box {
+            display: flex;
+            margin-bottom: 5px;
+            width: 50%;
+        }
+
+        .label {
+            min-width: 100px;
+            font-weight: bold;
+            margin-right: 45px;
+        }
+
+        .med-history-label {
+            min-width: 100px;
+            font-weight: bold;
+            margin-right: 30px;
+        }
+
+        .value {
+            flex: 1;
+            border: 1px solid #000;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Patient Information</h2>
+    <div class="info-box">
+        <div class="label">Name:</div>
+        <div class="value" id="patientName">{{ patient_details.name }}</div>
+    </div>
+
+    <div class="info-box">
+        <div class="label">Email:</div>
+        <div class="value" id="patientEmail">{{ patient_details.email }}</div>
+    </div>
+
+    <div class="info-box">
+        <div class="label">Weight:</div>
+        <div class="value" id="patientWeight">{{ patient_details.weight }}</div>
+    </div>
+
+    <div class="info-box">
+        <div class="label">Height:</div>
+        <div class="value" id="patientHeight">{{ patient_details.height }}</div>
+    </div>
+
+    <div class="info-box">
+        <div class="label">Gender:</div>
+        <div class="value" id="patientGender">{{ patient_details.gender }}</div>
+    </div>
+
+    <div class="info-box">
+        <div class="label">Age:</div>
+        <div class="value" id="patientAge">{{ patient_details.age }}</div>
+    </div>
+
+    <div class="info-box">
+        <div class="med-history-label">Medical History:</div>
+        <div class="value" id="patientMedicalHistory">{{ patient_details.medical_history }}</div>
+    </div>
+    <script>
+        function fetchPatientInfo() {
+            fetch('/patient-info', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then((response) => {response.json()})
+            .then((data) => {console.log(data)})
+            .catch(error => console.error('Error:', error));
+        }
+
+
+
+    </script>
+</body>
+</html>
+
