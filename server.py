@@ -2,6 +2,7 @@ from flask import *
 import bcrypt
 import sqlite3
 import json
+import os
 import models.doctor as doctor
 from models.patient import Patient
 import models.medicine as medicine
@@ -9,7 +10,7 @@ from models.doctor import Doctor
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 app = Flask(__name__)
-app.secret_key = "Anchis19cbcj7"
+app.secret_key = os.urandom(24)
 # ---------------------------------- Login Section ------------------------------------------
 
 @app.route('/')
@@ -139,8 +140,8 @@ def adddoctor():
 def afterdoclogin():
     if 'auth' in session:
         email = session['auth']
+        print(email)
         doctor_details = Doctor().viewprofile(email)
-        print(doctor_details)
         return render_template('view_doc_profile.html', doctor_details=doctor_details)
     else:
         return "User not logged in"
