@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Patient</title>
+</head>
+<body>
+    <h2>Create Patient</h2>
+    <form id="createPatientForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required>
+        <br><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+        <br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+        <br><br>
+        <label for="weight">Weight:</label>
+        <input type="text" id="weight" required>
+        <br><br>
+        <label for="height">Height:</label>
+        <input type="text" id="height" required>
+        <br><br>
+        <label for="gender">Gender:</label>
+        <input type="text" id="gender" required>
+        <br><br>
+        <label for="age">Age:</label>
+        <input type="text" id="age" required>
+        <br><br>
+        <label for="medical_history">Medical History:</label>
+        <textarea id="medical_history" required></textarea>
+        <br><br>
+        <button type="submit" onclick="createPatient()">Submit</button>
+    </form>
+
+    <script>
+        function createPatient() {
+            var name = document.getElementById('name').value;
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+            var weight = document.getElementById('weight').value;
+            var height = document.getElementById('height').value;
+            var gender = document.getElementById('gender').value;
+            var age = document.getElementById('age').value;
+            var medical_history = document.getElementById('medical_history').value;
+
+            // Perform create-patient request using fetch or other methods
+            fetch('/create-patient', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "name": name,
+                    "email": email,
+                    "password": password,
+                    "weight": weight,
+                    "height": height,
+                    "gender": gender,
+                    "age": age,
+                    "medical_history": medical_history
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data); // Display the response or perform appropriate actions
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
