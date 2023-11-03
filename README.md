@@ -49,5 +49,5 @@ Start the web app :
 
 # Video Presentation
 ---------------------------------------
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/NbTXy1f2K1o?si=rkL0PlORG5PoARrs/0.jpg)](https://www.youtube.com/watch?v=NbTXy1f2K1o?si=rkL0PlORG5PoARrs)
+[![IMAGE ALT TEXT HERE](https://imgur.com/JKhsccQ)](https://www.youtube.com/watch?v=NbTXy1f2K1o?si=rkL0PlORG5PoARrs)
 
