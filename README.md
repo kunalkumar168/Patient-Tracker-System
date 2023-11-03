@@ -49,5 +49,7 @@ Start the web app :
 
 # Video Presentation
 ---------------------------------------
-[![IMAGE ALT TEXT HERE](https://i.imgur.com/JKhsccQ.png)](https://www.youtube.com/watch?v=NbTXy1f2K1o?si=rkL0PlORG5PoARrs)
+<a href="https://www.youtube.com/watch?v=NbTXy1f2K1o?si=rkL0PlORG5PoARrs">
+  <img src="https://i.imgur.com/JKhsccQ.png" position="relative" height="200px"/>
+</a>
 
