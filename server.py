@@ -114,14 +114,18 @@ def afterpatlogin():
     else:
         return "User not logged in"
 
-@app.route('/get-doctor-list', methods=['GET'])
+@app.route('/get-doctor-list', methods=['POST'])
 def getdocforspecialization():
     req_data = request.get_json()
     first_name = req_data['first_name']
     last_name = req_data['last_name']
     specialization = req_data['specialization']
     doctors = Doctor().getdoclist(first_name, last_name, specialization)
-    return doctors
+    return viewdocfrompat(json.dumps(doctors))
+
+@app.route('/get-doctor-list', methods=['GET'])
+def viewdocfrompat(doctors):
+    return render_template('doc_list.html', doctors=json.dumps(doctors))
 
 @app.route('/add-doctor', methods=['POST'])
 def adddoctor():
@@ -132,7 +136,10 @@ def adddoctor():
         doctor_email = user_data['doctor_email']
         result = Patient.bookdoctor(doctor_email)
         return result
-    
+
+# @app.route('/patient-dashboard', methods=['GET'])
+# def get_doc_list():
+#     return render_template('view_doc_list.html')
 
 # --------------------------------- Doctor Components -------------------------------------------
 

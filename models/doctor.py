@@ -9,7 +9,7 @@ class Doctor:
         self.conn = sqlite3.connect('./healthdb.db')
         self.cur = self.conn.cursor()
         self.setup_db()
-
+        
     def setup_db(self):
         self.cur.execute('CREATE TABLE IF NOT EXISTS doctors (email TEXT PRIMARY KEY, pass TEXT, name TEXT, specialization TEXT, experience TEXT, patient_emails TEXT)')
         self.conn.commit()
@@ -63,19 +63,29 @@ class Doctor:
         return None
 
     def getdoclist(self, first_name, last_name, specialization):
-        doc_email = session['auth']
         try:
             if first_name:
-                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ?", first_name)
+                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ?", (first_name,))
             elif last_name:
-                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ?", last_name)
+                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ?", (last_name,))
             elif specialization:
-                self.cur.execute("SELECT * FROM doctors WHERE specialization=?", specialization)
+                self.cur.execute("SELECT * FROM doctors WHERE specialization=?", (specialization,))
             else:
                 self.cur.execute("SELECT * FROM doctors")
                 
             rows = self.cur.fetchall()
-            return rows
+            if rows:
+                final = []
+                for doctor_data in rows:
+                    result = {}
+                    result['name'] = doctor_data[0]
+                    result['email'] = doctor_data[2]
+                    result['specialization'] = doctor_data[3]
+                    result['experience'] = doctor_data[4]
+                    final.append(result)
+                return final
+            else:
+                return []
         except sqlite3.Error as error:
             print(error)
             return str(error)
