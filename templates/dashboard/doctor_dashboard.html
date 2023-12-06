@@ -1,0 +1,103 @@
+{% extends "core/base.html" %}
+
+{% block title %}Dashboard {% endblock %}
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h1 class="display-4 fw-bold">Hi, {{ doctor_details.first_name }} {{ doctor_details.last_name }}</h1>
+        </div>
+
+        <div class="patient-details-table">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td class="dark-grey"><b>Email:</b></td>
+                        <td class="light-green">{{ doctor_details.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="dark-grey"><b>Specialization:</b></td>
+                        <td class="light-green">{{ doctor_details.specialization }}</td>
+                    </tr>
+                    <tr>
+                        <td class="dark-grey"><b>Experience:</b></td>
+                        <td class="light-green">{{ doctor_details.experience }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>  
+
+        <div class="appointments-section">
+            <h2 class="mt-4">Pending Approvals:</h2>
+            {% if appointments|selectattr('status', 'equalto', 'started')|list %}
+                <div class="table-responsive-sm">
+                    <table class="table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="row" style="width: 25%;">Patient Name</th>
+                                <th scope="row" style="width: 25%;">Date</th>
+                                <th scope="row" style="width: 25%;">Time</th>
+                                <th scope="row" style="width: 25%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                                {% if appointment.status == 'started' %}
+                                    <tr>
+                                        <td style="width: 25%;">{{ appointment.patient_name }}</td>
+                                        <td style="width: 25%;">{{ appointment.date }}</td>
+                                        <td style="width: 25%;">{{ appointment.time }}</td>
+                                        <td style="width: 25%;">
+                                            <a href="{{ url_for('pending_request', patient_email=appointment.patient_email, action='accept') }}" class="btn btn-primary btn-sm">Accept</a>
+                                            <span style="margin-right: 10px;"></span>
+                                            <a href="{{ url_for('pending_request', patient_email=appointment.patient_email, action='reject') }}" class="btn btn-secondary btn-sm">Reject</a>
+                                        </td>                                        
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No upcoming appointments.</p>
+            {% endif %}
+        </div>
+
+        <div class="appointments-section">
+            <h2 class="mt-4">Upcoming Appointments:</h2>
+            {% if appointments|selectattr('status', 'equalto', 'inprogress')|list %}
+                <div class="table-responsive-sm">
+                    <table class="table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="row" style="width: 25%;">Patient Name</th>
+                                <th scope="row" style="width: 25%;">Date</th>
+                                <th scope="row" style="width: 25%;">Time</th>
+                                <th scope="row" style="width: 25%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                                {% if appointment.status == 'inprogress' %}
+                                    <tr>
+                                        <td style="width: 25%;">{{ appointment.patient_name }}</td>
+                                        <td style="width: 25%;">{{ appointment.date }}</td>
+                                        <td style="width: 25%;">{{ appointment.time }}</td>
+                                        <td style="width: 25%;">
+                                            <a href="{{ url_for('edit_patient', patient_email=appointment.patient_email, patient_name=appointment.patient_name) }}" class="btn btn-primary btn-sm">Edit</a>
+                                            <span style="margin-right: 10px;"></span>
+                                            <a href="{{ url_for('patient_info', patient_email=appointment.patient_email) }}" class="btn btn-primary btn-sm">View Profile</a>
+                                        </td>                                        
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No upcoming appointments.</p>
+            {% endif %}
+        </div>
+        
+    </div>
+{% endblock %}

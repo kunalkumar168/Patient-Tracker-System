@@ -1,0 +1,147 @@
+{% extends "core/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h1 class="display-4 fw-bold">Hi, {{ patient_details.first_name }} {{ patient_details.last_name }}</h1>
+        </div>
+
+        <div class="patient-details-table">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td class="dark-grey"><b>Email:</b></td>
+                        <td class="light-green">{{ patient_details.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="dark-grey"><b>Age:</b></td>
+                        <td class="light-green">{{ patient_details.age }}</td>
+                    </tr>
+                    <tr>
+                        <td class="dark-grey"><b>Weight:</b></td>
+                        <td class="light-green">{{ patient_details.weight }} lbs</td>
+                    </tr>
+                    <tr>
+                        <td class="dark-grey"><b>Height:</b></td>
+                        <td class="light-green">{{ patient_details.height }} cm</td>
+                    </tr>
+                    <tr>
+                        <td class="dark-grey"><b>Gender:</b></td>
+                        <td class="light-green">{{ patient_details.gender }}</td>
+                    </tr>
+                    <tr>
+                        <td class="dark-grey"><b>Medical History:</b></td>
+                        <td class="light-green">{{ patient_details.medical_history }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ----------------------------------Appointments Dashboard---------------------------------- -->
+
+        <div class="appointments-section">
+            <h2 class="mt-4">Pending Approvals:</h2>
+            {% if appointments|selectattr('status', 'equalto', 'started')|list %}
+                <div class="table-responsive-sm">
+                    <table class="table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="row" style="width: 30%;">Doctor Name</th>
+                                <th scope="row" style="width: 20%;">Date</th>
+                                <th scope="row" style="width: 20%;">Time</th>
+                                <th scope="row" style="width: 30%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                                {% if appointment.status == 'started' %}
+                                    <tr>
+                                        <td style="width: 30%;">{{ appointment.doctor_name }}</td>
+                                        <td style="width: 20%;">{{ appointment.date }}</td>
+                                        <td style="width: 20%;">{{ appointment.time }}</td>
+                                        <td style="width: 30%;">
+                                            <a href="{{ url_for('edit_appointment', doctor_email=appointment.doctor_email) }}" class="btn btn-primary btn-sm">Edit</a>
+                                            <span style="margin-right: 10px;"></span>
+                                            <a href="{{ url_for('cancel_appointment', doctor_email=appointment.doctor_email, action='cancel') }}" class="btn btn-danger btn-sm">Cancel</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No upcoming appointments.</p>
+            {% endif %}
+        </div>
+
+        <div class="appointments-section">
+            <h2 class="mt-4">Upcoming Appointments:</h2>
+            {% if appointments|selectattr('status', 'equalto', 'inprogress')|list %}
+                <div class="table-responsive-sm">
+                    <table class="table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="row" style="width: 30%;">Doctor Name</th>
+                                <th scope="row" style="width: 20%;">Date</th>
+                                <th scope="row" style="width: 20%;">Time</th>
+                                <th scope="row" style="width: 30%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                                {% if appointment.status == 'inprogress' %}
+                                    <tr>
+                                        <td style="width: 30%;">{{ appointment.doctor_name }}</td>
+                                        <td style="width: 20%;">{{ appointment.date }}</td>
+                                        <td style="width: 20%;">{{ appointment.time }}</td>
+                                        <td style="width: 30%;">
+                                            <a href="{{ url_for('doctor_info', doctor_email=appointment.doctor_email) }}" class="btn btn-primary btn-sm">View Profile</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No upcoming appointments.</p>
+            {% endif %}
+        </div>
+
+        <div class="appointments-section">
+            <h2 class="mt-4">Completed Appointments:</h2>
+            {% if appointments|selectattr('status', 'equalto', 'completed')|list %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Doctor Name</th>
+                            <th style="width: 30%;">Prescription</th>
+                            <th style="width: 30%;">Profile</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                            {% if appointment.status == 'completed' %}
+                                <tr>
+                                    <td>{{ appointment.doctor_name }}</td>
+                                    <td>
+                                        <a href="{{ url_for('patient_prescription', doctor_email=appointment.doctor_email) }}" class="btn btn-primary btn-sm">View Prescription</a>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('doctor_info', doctor_email=appointment.doctor_email) }}" class="btn btn-primary btn-sm">View Profile</a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No past appointments.</p>
+            {% endif %}
+        </div>
+        
+    </div>
+{% endblock %}
