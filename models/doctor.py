@@ -1,6 +1,7 @@
 import sqlite3
 from flask import *
 import bcrypt
+from datetime import datetime
 
 #patients will be JSON
 
@@ -14,8 +15,8 @@ class Doctor:
         self.cur.execute('CREATE TABLE IF NOT EXISTS doctors (email TEXT PRIMARY KEY, pass TEXT, name TEXT, specialization TEXT, experience TEXT, patient_emails TEXT)')
         self.conn.commit()
 
-    def create(self, name, email, hash, specialization, experience):
-        self.cur.execute('INSERT INTO doctors VALUES (?,?,?,?,?,?)', (email, hash, name, specialization, experience, ""))
+    def create(self, name, email, hashed_password, specialization, experience):
+        self.cur.execute('INSERT INTO doctors VALUES (?,?,?,?,?,?)', (email, hashed_password, name, specialization, experience, ""))
         self.conn.commit()
 
 
@@ -44,33 +45,31 @@ class Doctor:
             self.conn.commit()
             return "Success"
 
-    def editpatient(self, pat_email, prescription):
-        doc_email = session['auth']
-        self.cur.execute('SELECT patient_emails FROM doctors WHERE email=?', (doc_email,))
-        result = self.cur.fetchone()
-        if result:
-            patients = json.loads(result[0]) if result[0] else []
-            if pat_email in patients:
-                self.cur.execute('SELECT doctor_and_medicines FROM patients WHERE email = ?', (pat_email,))
-                patient_data = self.cur.fetchone()
-                if patient_data:
-                    doctors_and_meds = json.loads(patient_data[0]) if patient_data[0] else []
-                    if doctors_and_meds and pat_email in doctors_and_meds:
-                        doctors_and_meds[pat_email] = prescription
-                        self.cur.execute('UPDATE patients SET doctor_and_medicines = ? WHERE email = ?', (json.dumps(doctors_and_meds), pat_email,))
-                        self.conn.commit()
-                        return "Success"
-        return None
-
     def getdoclist(self, first_name, last_name, specialization):
         try:
-            if first_name:
-                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ?", (first_name,))
+            if first_name and last_name and specialization:
+                # Fetch data when all three variables are present
+                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ? AND name LIKE ? AND specialization=?", (f"%{first_name}%", f"%{last_name}%", specialization))
+            elif first_name and last_name:
+                # Fetch data when both first_name and last_name are present
+                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ? AND name LIKE ?", (f"%{first_name}%", f"%{last_name}%"))
+            elif first_name and specialization:
+                # Fetch data when first_name and specialization are present
+                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ? AND specialization=?", (f"%{first_name}%", specialization))
+            elif last_name and specialization:
+                # Fetch data when last_name and specialization are present
+                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ? AND specialization=?", (f"%{last_name}%", specialization))
+            elif first_name:
+                # Fetch data when only first_name is present
+                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ?", (f"%{first_name}%",))
             elif last_name:
-                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ?", (last_name,))
+                # Fetch data when only last_name is present
+                self.cur.execute("SELECT * FROM doctors WHERE name LIKE ?", (f"%{last_name}%",))
             elif specialization:
+                # Fetch data when only specialization is present
                 self.cur.execute("SELECT * FROM doctors WHERE specialization=?", (specialization,))
             else:
+                # Fetch all data when no variable is present
                 self.cur.execute("SELECT * FROM doctors")
                 
             rows = self.cur.fetchall()
@@ -78,8 +77,8 @@ class Doctor:
                 final = []
                 for doctor_data in rows:
                     result = {}
-                    result['name'] = doctor_data[0]
-                    result['email'] = doctor_data[2]
+                    result['name'] = doctor_data[2]
+                    result['email'] = doctor_data[0]
                     result['specialization'] = doctor_data[3]
                     result['experience'] = doctor_data[4]
                     final.append(result)
@@ -90,39 +89,73 @@ class Doctor:
             print(error)
             return str(error)
         
-    def fetchpathistory(self, pat_email):
-        doc_email = session['auth']
-        try:
-            self.cur.execute('SELECT patient_emails FROM doctors WHERE email=?', (doc_email,))
-            doc_data = self.cur.fetchone()
-            result = []
-
-            if doc_data:
-                patient_emails = json.loads(doc_data[0]) if doc_data[0] else []
-                if pat_email in patient_emails:
-                    self.cur.execute('SELECT medical_history FROM patients WHERE email=?', (pat_email,))
-                    res = self.cur.fetchone()
-                    result.append({"medical_history":res[0]})
-                    self.cur.execute('SELECT doctor_and_medicines FROM patients WHERE email = ?', (pat_email,))
-                    doc_med = self.cur.fetchone()
-                    if doc_med:
-                        doctors_and_meds = json.loads(doc_med[0]) if doc_med[0] else []
-                        if doctors_and_meds and pat_email in doctors_and_meds:
-                            result.append({"current_medicine":doctors_and_meds[pat_email]})
-            return result
-        except sqlite3.Error as error:
-            print(error)
-            return str(error)
-        
     def viewprofile(self, doc_email):
         self.cur.execute('SELECT * FROM doctors WHERE email = ?', (doc_email,))
         doctor_data = self.cur.fetchone()
         if doctor_data:
             result = {}
-            result['name'] = doctor_data[0]
-            result['email'] = doctor_data[2]
+            try:
+                first, second = [str(i) for i in doctor_data[2].split(' ')]
+            except:
+                first, second = doctor_data[2], None
+            result['first_name'] = first
+            result['second_name'] = second
+            result['email'] = doctor_data[0]
             result['specialization'] = doctor_data[3]
             result['experience'] = doctor_data[4]
             return result
         else:
             return []
+        
+    def getallappointments(self, doc_email):
+        self.cur.execute('SELECT * FROM appointment WHERE doctor_email = ?', (doc_email,))
+        doctor_data = self.cur.fetchall()
+
+        appointments = []
+        for appointment in doctor_data:
+            result = {}
+            result['patient_email'] = appointment[1]
+            self.cur.execute('SELECT * FROM patients WHERE email = ?', (result['patient_email'],))
+            result['patient_name'] = self.cur.fetchone()[0] 
+            result['date'] = appointment[3]
+            result['time'] = appointment[4]
+            result['date'] = datetime.strptime(result['date'], "%Y-%m-%d").strftime("%m/%d/%Y")            
+            result['time'] = datetime.strptime(result['time'], "%H:%M").strftime("%I:%M %p")
+            result['reason'] = appointment[5]
+            result['prescription'] = appointment[6]
+            result['status'] = appointment[7]
+            appointments.append(result)
+
+        return appointments
+
+    def getinfo(self, doc_email):
+        self.cur.execute('SELECT * FROM doctors WHERE email = ?', (doc_email,))
+        doctor_data = self.cur.fetchone()
+        if doctor_data:
+            result = {}
+            result['name'] = doctor_data[2]
+            result['email'] = doctor_data[0]
+            result['specialization'] = doctor_data[3]
+            result['experience'] = doctor_data[4]
+            return result
+        else:
+            return []
+        
+    def editpatient(self, pat_email, doc_email, prescription, status):
+        self.cur.execute("SELECT * FROM appointment WHERE patient_email=? AND doctor_email=?", (pat_email, doc_email))
+        result = self.cur.fetchall()
+        if result:
+            self.cur.execute('UPDATE appointment SET prescription = ?, status = ? WHERE patient_email=? AND doctor_email=?', (prescription, status, pat_email, doc_email))
+            self.conn.commit()
+
+    def pendingrequest(self, pat_email, doc_email, accept=None, reject=None):
+        self.cur.execute("SELECT * FROM appointment WHERE patient_email=? AND doctor_email=?", (pat_email, doc_email))
+        result = self.cur.fetchall()
+        if result:
+            if reject:
+                status = 'started'
+                self.cur.execute('DELETE from appointment WHERE status=? AND patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
+            elif accept:
+                status = 'inprogress'
+                self.cur.execute('UPDATE appointment SET status = ? WHERE patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
+            self.conn.commit()
