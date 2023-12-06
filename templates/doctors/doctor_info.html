@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+
+{% block title %}Doctor Information{% endblock %}
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h1 class="display-4 fw-bold">Doctor Information</h1>
+        </div>
+
+        <div>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th scope="row">Doctor Name</th>
+                        <td>{{ doctor_info.name }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Email</th>
+                        <td>{{ doctor_info.email }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Specialization</th>
+                        <td>{{ doctor_info.specialization }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Years of Experience</th>
+                        <td>{{ doctor_info.experience }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-secondary" id="backButton">Back</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('backButton').addEventListener('click', function() {
+            window.history.back();
+        });
+    </script>
+{% endblock %}

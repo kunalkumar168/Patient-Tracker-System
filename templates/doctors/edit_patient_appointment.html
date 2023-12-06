@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+
+{% block title %}Edit Appointment{% endblock %}
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h4 class="display-4 fw-bold">Edit Appointment for {{patient_name}}</h4>
+        </div>
+        
+        <form method="post" action="{{ url_for('edit_patient', patient_email=patient_email, patient_name=patient_name) }}">                            
+            <div class="col-md-8">
+                <label for="prescription" class="form-label fs-5">Prescription</label>
+                <textarea class="form-control mb-2" id="prescription" name="prescription" placeholder="Prescription" rows="4"></textarea>
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label fs-5">Status</label>
+                <select class="form-select mb-2" id="status" name="status">
+                    <option value="" disabled selected>Select a status</option>
+                    <option value="started">Started</option>
+                    <option value="inprogress">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            <div class="col-md-8 d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+                <button type="button" class="btn btn-secondary btn-lg ms-2" id="backButton">Back</button>
+            </div>
+        </form>        
+
+        <div id="flash-messages">
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        // Auto-close flash messages after 5 seconds
+        setTimeout(function() {
+            $('#flash-messages .alert').alert('close');
+        }, 5000);
+    </script>
+    <script>
+        document.getElementById('backButton').addEventListener('click', function() {
+            window.history.back();
+        });
+    </script>
+{% endblock %}
