@@ -1,0 +1,103 @@
+{% extends "core/base.html" %}
+
+{% block title %}Register as Patient{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Register as Patient</h1>
+    <!-- Patient registration form -->
+    <form method="post">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 bg-light p-4">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td style="width: 40%;"><label for="name" class="form-label">Name:</label></td>
+                                <td><input type="text" id="name" name="name" class="form-control" required></td>
+                            </tr>
+                            <tr>
+                                <td><label for="email" class="form-label">Email:</label></td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="email" id="email" name="email" class="form-control" required placeholder="patient1@example.com">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label for="password" class="form-label">Password:</label></td>
+                                <td><input type="password" id="password" name="password" class="form-control" required></td>
+                            </tr>
+                            <tr>
+                                <td><label for="age" class="form-label">Age:</label></td>
+                                <td>
+                                    <select id="age" name="age" class="form-select" required>
+                                        {% for i in range(1, 121) %}
+                                            <option value="{{ i }}">{{ i }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label for="height" class="form-label">Height:</label></td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" id="height" name="height" class="form-control" required>
+                                        <span class="input-group-text">cm</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label for="weight" class="form-label">Weight:</label></td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" id="weight" name="weight" class="form-control" required>
+                                        <span class="input-group-text">pounds</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label for="gender" class="form-label">Gender:</label></td>
+                                <td>
+                                    <select id="gender" name="gender" class="form-select" required>
+                                        <option value="" disabled selected>Select a Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="prefer_not_to_say">Prefer not to say</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label for="medical_history" class="form-label">Medical History:</label></td>
+                                <td><textarea id="medical_history" name="medical_history" class="form-control" required></textarea></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">Login</a>
+                        <button type="submit" class="btn btn-secondary btn-lg ms-2">Register</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    <div id="flash-messages">
+        {% for message in get_flashed_messages() %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Custom script to auto-close flash messages after a few seconds -->
+    <script>
+        // Auto-close flash messages after 5 seconds
+        setTimeout(function() {
+            $('#flash-messages .alert').alert('close');
+        }, 5000);
+    </script>
+
+{% endblock %}

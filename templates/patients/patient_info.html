@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+
+{% block title %}Patient Information{% endblock %}
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h1 class="display-4 fw-bold">Patient Information</h1>
+        </div>
+
+        <div>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th scope="row">Patient Name</th>
+                        <td>{{ patient_info.name }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Email</th>
+                        <td>{{ patient_info.email }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Age</th>
+                        <td>{{ patient_info.age }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Gender</th>
+                        <td>{{ patient_info.gender }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Height</th>
+                        <td>{{ patient_info.height }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Weight</th>
+                        <td>{{ patient_info.weight }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Medical History</th>
+                        <td>{{ patient_info.medical_history }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-secondary" id="backButton">Back</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('backButton').addEventListener('click', function() {
+            window.history.back();
+        });
+    </script>
+{% endblock %}

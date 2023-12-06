@@ -1,0 +1,67 @@
+{% extends "core/base.html" %}
+
+{% block title %}Book Appointment{% endblock %}
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h1 class="display-4 fw-bold">Book Doctor</h1>
+        </div>
+
+        <form method="post" action="{{ url_for('book_doctor', doctor_email=doctor_email, doctor_name=doctor_name) }}">
+            <div class="col-md-8">
+                <label for="doctor_name" class="sr-only">Doctor Name</label>
+                <div class="input-group mb-2">
+                    <span class="form-control">{{ doctor_name }}</span>
+                    <a href="{{ url_for('doctor_info', doctor_email=doctor_email) }}" class="btn btn-outline-secondary" type="button">View Profile</a>
+                </div>
+            </div>
+        
+            <div class="col-md-8">
+                <label for="date" class="form-label fs-5">Appointment Date</label>
+                <input type="date" class="form-control mb-2" id="date" name="date" required>
+            </div>
+        
+            <div class="col-md-8">
+                <label for="time" class="form-label fs-5">Appointment Time</label>
+                <input type="time" class="form-control mb-2" id="time" name="time" required>
+            </div>
+        
+            <div class="col-md-8">
+                <label for="reason" class="form-label fs-5">Reason to Visit</label>
+                <textarea class="form-control mb-2" id="reason" name="reason" rows="3"></textarea>
+            </div>
+        
+            <div class="col-md-8 d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary btn-lg">Book</button>
+                <!-- <button type="button" class="btn btn-secondary btn-lg ms-2" id="backButton">Back</button> -->
+                <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary btn-lg ms-2">Back</a>
+            </div>
+        </form>        
+
+        <div id="flash-messages">
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Custom script to auto-close flash messages after a few seconds -->
+    <script>
+        // Auto-close flash messages after 5 seconds
+        setTimeout(function() {
+            $('#flash-messages .alert').alert('close');
+        }, 5000);
+    </script>
+
+    <!-- <script>
+        document.getElementById('backButton').addEventListener('click', function() {
+            window.history.back();
+        });
+    </script> -->
+{% endblock %}

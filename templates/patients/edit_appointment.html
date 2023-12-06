@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+
+{% block title %}Edit Appointment{% endblock %}
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h4 class="display-4 fw-bold">Edit Appointment for {{ patient_name }}</h4>
+        </div>
+        
+        <form method="post" action="{{ url_for('edit_appointment', doctor_email=doctor_email) }}">                            
+            <div class="col-md-8">
+                <label for="new_date" class="form-label fs-5">New Date</label>
+                <input type="date" class="form-control mb-2" id="new_date" name="new_date" required>
+                
+                <label for="new_time" class="form-label fs-5">New Time</label>
+                <input type="time" class="form-control mb-2" id="new_time" name="new_time" required>
+            </div>
+            
+            <div class="col-md-8 d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                <!-- <button type="button" class="btn btn-secondary btn-lg ms-2" id="backButton">Back</button> -->
+                <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary btn-lg ms-2">Back</a>
+            </div>
+        </form>
+
+        <div id="flash-messages">
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    <script>
+        // Auto-close flash messages after 5 seconds
+        setTimeout(function() {
+            $('#flash-messages .alert').alert('close');
+        }, 5000);
+    </script>
+
+    <!-- <script>
+        document.getElementById('backButton').addEventListener('click', function() {
+            window.history.back();
+        });
+    </script> -->
+{% endblock %}

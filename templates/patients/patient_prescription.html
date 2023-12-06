@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+
+{% block title %}Patient Prescription{% endblock %}
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h1 class="display-4 fw-bold">Patient Prescription</h1>
+        </div>
+        {% if patient_info %}
+            {% if patient_info.status == 'completed' %}
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-text"><strong>Patient Name:</strong> {{ patient_info.patient_name }}</p>
+                        <p class="card-text"><strong>Doctor Name:</strong> {{ patient_info.doctor_name }}</p>
+                        <p class="card-text"><strong>Prescription:</strong> {{ patient_info.prescription }}</p>
+                    </div>
+                </div>
+            {% else %}
+                <p>No prescription available for the patient.</p>
+            {% endif %}
+        {% else %}
+            <p>No prescription available for the patient.</p>
+        {% endif %}
+        <div class="d-flex justify-content-end mt-3">
+            <button class="btn btn-primary" id="backButton">Back</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('backButton').addEventListener('click', function() {
+            window.history.back();
+        });
+    </script>
+{% endblock %}

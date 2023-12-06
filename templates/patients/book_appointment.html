@@ -1,0 +1,74 @@
+{% extends "core/base.html" %}
+
+{% block title %}Book Appointments{% endblock %}
+
+
+{% block content %}
+    <div class="container my-5">
+        <div>
+            <h1 class="display-4 fw-bold">Search Doctor</h1>
+        </div>
+
+        <form method="post" action="{{ url_for('book_appointment') }}">
+            <div class="form-row align-items-center">
+                <div class="col-md-8">
+                    <label for="first_name" class="sr-only">First Name</label>
+                    <input type="text" class="form-control mb-2" id="first_name" name="first_name" placeholder="First Name">
+                </div>
+                <div class="col-md-8">
+                    <label for="last_name" class="sr-only">Last Name</label>
+                    <input type="text" class="form-control mb-2" id="last_name" name="last_name" placeholder="Last Name">
+                </div>
+                <div class="col-md-8">
+                    <label for="specialization" class="sr-only">Specialization</label>
+                    <input type="text" class="form-control mb-2" id="specialization" name="specialization" placeholder="Specialization">
+                </div>
+                <div class="col-md-8">
+                    <button type="submit" class="btn btn-primary mb-2">Search</button>
+                </div>
+            </div>
+        </form>
+
+        {% if doctors %}
+            <!-- Display search results with book buttons inside a box -->
+            <div class="table-container-box">
+                <div class="table-container">
+                    <button class="close-btn" onclick="closeTable()">X</button>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Doctor Name</th>
+                                <th>Email</th>
+                                <th>Specialization</th>
+                                <th>Years of Experience</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doctor in doctors %}
+                                <tr>
+                                    <td>{{ doctor.name }}</td>
+                                    <td>{{ doctor.email }}</td>
+                                    <td>{{ doctor.specialization }}</td>
+                                    <td>{{ doctor.experience }}</td>
+                                    <td>
+                                        <a href="{{ url_for('book_doctor', doctor_email=doctor.email, doctor_name=doctor.name) }}" class="btn btn-primary">Book</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <script>
+                function closeTable() {
+                    // Add JavaScript logic to close or hide the table
+                    document.querySelector('.table-container-box').style.display = 'none';
+                }
+            </script>
+        {% endif %}
+        
+    </div>
+{% endblock %}
+
+
