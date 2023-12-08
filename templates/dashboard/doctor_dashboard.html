@@ -34,24 +34,28 @@
                     <table class="table">
                         <thead class="thead-dark">
                             <tr>
-                                <th scope="row" style="width: 25%;">Patient Name</th>
-                                <th scope="row" style="width: 25%;">Date</th>
-                                <th scope="row" style="width: 25%;">Time</th>
-                                <th scope="row" style="width: 25%;">Action</th>
+                                <th scope="row" style="width: 20%;">Patient Name</th>
+                                <th scope="row" style="width: 20%;">Date</th>
+                                <th scope="row" style="width: 20%;">Time</th>
+                                <th scope="row" style="width: 20%;">Action</th>
+                                <th scope="row" style="width: 20%;">Profile</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for appointment in appointments %}
                                 {% if appointment.status == 'started' %}
                                     <tr>
-                                        <td style="width: 25%;">{{ appointment.patient_name }}</td>
-                                        <td style="width: 25%;">{{ appointment.date }}</td>
-                                        <td style="width: 25%;">{{ appointment.time }}</td>
-                                        <td style="width: 25%;">
+                                        <td style="width: 20%;">{{ appointment.patient_name }}</td>
+                                        <td style="width: 20%;">{{ appointment.date }}</td>
+                                        <td style="width: 20%;">{{ appointment.time }}</td>
+                                        <td style="width: 20%;">
                                             <a href="{{ url_for('pending_request', patient_email=appointment.patient_email, action='accept') }}" class="btn btn-primary btn-sm">Accept</a>
                                             <span style="margin-right: 10px;"></span>
                                             <a href="{{ url_for('pending_request', patient_email=appointment.patient_email, action='reject') }}" class="btn btn-secondary btn-sm">Reject</a>
-                                        </td>                                        
+                                        </td>
+                                        <td style="width: 20%;">
+                                            <a href="{{ url_for('patient_info', patient_email=appointment.patient_email) }}" class="btn btn-primary btn-sm">View Profile</a>
+                                        </td>                                   
                                     </tr>
                                 {% endif %}
                             {% endfor %}

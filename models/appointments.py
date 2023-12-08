@@ -1,10 +1,7 @@
 import sqlite3
 from flask import *
 import bcrypt
-from models.doctor import Doctor
-from models.patient import Patient
 
-medications = []
 #creates the appointment
 class Appointment:
     def __init__(self):
