@@ -1,0 +1,81 @@
+{% extends "core/base.html" %}
+
+{% block title %}Report{% endblock %}
+
+
+{% block content %}
+    <div class="container my-5">
+        <!-- Report Upload Section -->
+        <div>
+            <h1 class="display-4 fw-bold">Upload Report</h1>
+        </div>
+        <div class="report-upload-section">
+            <form action="{{ url_for('upload_reports') }}" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="reportName" class="form-label">Report Name:</label>
+                    <input type="text" class="form-control" id="reportName" name="report_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reportFile" class="form-label">Upload Report File (in pdf, jpg, jpeg):</label>
+                    <input type="file" class="form-control" id="reportFile" name="file" accept=".pdf, .jpg, .jpeg" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
+        
+        <div id="flash-messages">
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Previous Uploads Section -->
+        <div class="mt-4">
+            <h1 class="display-4 fw-bold">Previous Uploads</h1>
+        </div>
+        <div class="previous-uploads-section">
+            {% if files %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Report Name</th>
+                            <th>Action</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                            <tr>
+                                <td>{{ file.report_name }}</td>
+                                <td>
+                                    <a href="{{ url_for('serve_report', file_path=file.file_path) }}" class="btn btn-primary btn-sm">View Report</a>
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('delete_report', report_name=file.report_name) }}" method="post">
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No previous uploads available.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        // Auto-close flash messages after 5 seconds
+        setTimeout(function() {
+            $('#flash-messages .alert').alert('close');
+        }, 5000);
+    </script>
+
+{% endblock %}

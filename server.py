@@ -6,13 +6,17 @@ from models.patient import Patient
 from models.medicine import Medicine
 from models.doctor import Doctor
 from models.appointments import Appointment
+from models.reports import ReportFile
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, render_template, request, redirect, url_for
+from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///healthdb.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+UPLOAD_FOLDER = './files/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy()
 
 # Intialise the database
@@ -22,6 +26,7 @@ with app.app_context():
     Appointment().setup_db()
     Doctor().setup_db()
     Medicine().setup_db()
+    ReportFile().setup_db()
 
 # ---------------------------------- Common Section ------------------------------------------
 
@@ -49,7 +54,6 @@ def login():
     email = request.form['email']
     password = request.form['password']
     user_type = find_user_type(email)
-    print(email, password, user_type)
     if user_type == "Patient":
         login = Patient().login(email, password.encode('utf-8'))
     elif user_type == "Doctor":
@@ -66,7 +70,6 @@ def login():
         session['auth'] = email
         session['user_type'] = user_type
         if user_type=='Patient':
-            print(session)
             return redirect(url_for('patient_dashboard'))
         else:
             return redirect(url_for('doctor_dashboard'))
@@ -150,19 +153,26 @@ def book_doctor(doctor_email, doctor_name):
             date = request.form.get('date')
             time = request.form.get('time')
             reason = request.form.get('reason')
+
+            selected_reports = request.form.getlist('selected_reports')
+            if selected_reports:
+                try:
+                    for report_name in selected_reports:
+                        Patient().sharereportswithdoctors(pat_email=patient_email, doc_email=doctor_email, report_name=report_name)
+                except sqlite3.Error as error:
+                    flash('Failed to associate reports with the appointment. Try again!', 'failure')
+
             try:
                 Appointment().create(patient_email, doctor_email, date, time, reason)
                 flash('Appointment created successfully!', 'success')
             except sqlite3.Error as error:
                 if 'UNIQUE constraint failed' in str(error):
                     flash('Appointment can\'t be booked. Try again!', 'failure')
-
-    return render_template('patients/book_doctor.html', doctor_email=doctor_email, doctor_name=doctor_name)
-
-@app.route('/patient_info/<string:patient_email>', methods=['GET'])
-def patient_info(patient_email):
-    patient_info = Patient().getinfo(patient_email)
-    return render_template('patients/patient_info.html', patient_info=patient_info)
+    files = []
+    if 'auth' in session:
+        patient_email = session['auth']
+        files = Patient().getpatientreports(pat_email=patient_email)
+    return render_template('patients/book_doctor.html', doctor_email=doctor_email, doctor_name=doctor_name, files=files)
 
 @app.route('/patient_prescription/<string:doctor_email>', methods=['GET'])
 def patient_prescription(doctor_email):
@@ -198,6 +208,48 @@ def edit_appointment(doctor_email):
     
     return render_template('patients/edit_appointment.html', doctor_email=doctor_email, patient_name=patient_name)
     
+
+@app.route('/upload-report', methods=['GET', 'POST'])
+def upload_reports():
+    if request.method == 'POST':
+        if 'auth' in session:
+            patient_email = session['auth']
+            file = request.files['file']
+            name = request.form['report_name']
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
+            file.save(file_path)
+
+            try:
+                ReportFile().create(patient_email=patient_email, doctor_email=None, report_name=name, file_path=file_path)
+                flash('Reports was uploaded!', 'success')
+            except sqlite3.Error as error:
+                flash('Reports was not uploaded. Try again!', 'failue')
+    else:
+        if 'auth' in session:
+            patient_email = session['auth']
+            reports = Patient().getpatientreports(pat_email=patient_email)
+            return render_template('patients/upload_reports.html', files=reports)
+        
+    return redirect(url_for('patient_dashboard'))
+        
+@app.route('/serve-report/<path:file_path>')
+def serve_report(file_path):
+    if 'auth' in session:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], os.path.basename(file_path), as_attachment=False)
+    
+    return redirect(url_for('upload_reports'))
+
+@app.route('/delete-report/<path:report_name>', methods=['POST'])
+def delete_report(report_name):
+    if 'auth' in session:
+        patient_email = session['auth']
+        try:
+            Patient().deletereport(pat_email=patient_email, report_name=report_name)
+        except sqlite3.Error as error:
+            flash('Reports was not uploaded. Try again!', 'failue')
+    
+    return redirect(url_for('upload_reports'))
+        
 
 # # --------------------------------- Doctor Components -------------------------------------------
 
@@ -240,6 +292,15 @@ def register_doctor():
 def doctor_info(doctor_email):
     doctor_info = Doctor().getinfo(doctor_email)
     return render_template('doctors/doctor_info.html', doctor_info=doctor_info)
+
+
+@app.route('/patient_info/<string:patient_email>', methods=['GET'])
+def patient_info(patient_email):
+     if 'auth' in session:
+        doctor_email = session['auth']
+        patient_info = Patient().getinfo(patient_email)
+        patient_reports = Doctor().viewpatientreports(pat_email=patient_email, doc_email=doctor_email)
+        return render_template('patients/patient_info.html', patient_info=patient_info, patient_reports=patient_reports)
 
 @app.route('/edit_patient/<string:patient_email>/<string:patient_name>', methods=['GET', 'POST'])
 def edit_patient(patient_email, patient_name):

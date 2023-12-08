@@ -42,6 +42,34 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Past Reports Section -->
+        <div class="my-4">
+            <h2 class="fw-bold">Past Reports</h2>
+            {% if patient_reports %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Report Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in patient_reports %}
+                            <tr>
+                                <td>{{ report.report_name }}</td>
+                                <td>
+                                    <a href="{{ url_for('serve_report', file_path=report.file_path) }}" class="btn btn-primary btn-sm">View Report</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No past reports available.</p>
+            {% endif %}
+        </div>
+
         <div class="col-auto">
             <button class="btn btn-secondary" id="backButton">Back</button>
         </div>

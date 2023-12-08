@@ -2,7 +2,7 @@ import sqlite3
 from flask import *
 import bcrypt
 from datetime import datetime
-from models.doctor import Doctor
+from models.reports import ReportFile
 
 class Patient:
     def __init__(self):
@@ -11,11 +11,11 @@ class Patient:
         self.setup_db()
 
     def setup_db(self):
-        self.cur.execute('CREATE TABLE IF NOT EXISTS patients (name TEXT, email TEXT PRIMARY KEY, pass TEXT, weight TEXT, height TEXT, age TEXT, gender TEXT, medical_history TEXT, doctor_and_medicines TEXT)')
+        self.cur.execute('CREATE TABLE IF NOT EXISTS patients (name TEXT, email TEXT PRIMARY KEY, pass TEXT, weight TEXT, height TEXT, age TEXT, gender TEXT, medical_history TEXT)')
         self.conn.commit()
 
     def create(self, name, email, hashed_password, weight, height, age, gender, medical_history):
-        self.cur.execute('INSERT INTO patients VALUES (?,?,?,?,?,?,?,?,?)', (name, email, hashed_password, weight, height, age, gender, medical_history, ""))
+        self.cur.execute('INSERT INTO patients VALUES (?,?,?,?,?,?,?,?)', (name, email, hashed_password, weight, height, age, gender, medical_history))
         self.conn.commit()
 
 
@@ -116,5 +116,33 @@ class Patient:
     def cancelappointment(self, pat_email, doc_email):
         status = 'started'
         self.cur.execute('DELETE FROM appointment WHERE status=? AND patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
+        self.conn.commit()    
+
+    def getpatientreports(self, pat_email):
+        self.cur.execute('SELECT * FROM report WHERE patient_email = ?', (pat_email,))
+        patient_report = self.cur.fetchall()
+        reports = []
+        if patient_report:
+            for report in patient_report:
+                result = {}
+                result['patient_email'] = report[1]
+                result['doctor_email'] = report[2]
+                result['report_name'] = report[3]
+                result['file_path'] = report[4]
+                reports.append(result)
+
+        return reports
+    
+    def sharereportswithdoctors(self, pat_email, doc_email, report_name):
+        self.cur.execute('SELECT * FROM report WHERE patient_email=? AND report_name=?', (pat_email,report_name))
+        result = self.cur.fetchone()
+        if result and result[2]==None:
+            file_path = result[4]
+            self.cur.execute('DELETE FROM report WHERE patient_email=? AND report_name=?', (pat_email,report_name))
+            self.conn.commit()
+            ReportFile().create(patient_email=pat_email, doctor_email=doc_email, report_name=report_name, file_path=file_path)
+
+    def deletereport(self, pat_email, report_name):
+        self.cur.execute('DELETE FROM report WHERE patient_email=? AND report_name=?', (pat_email,report_name))
         self.conn.commit()
             
