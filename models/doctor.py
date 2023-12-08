@@ -12,11 +12,11 @@ class Doctor:
         self.setup_db()
         
     def setup_db(self):
-        self.cur.execute('CREATE TABLE IF NOT EXISTS doctors (email TEXT PRIMARY KEY, pass TEXT, name TEXT, specialization TEXT, experience TEXT, patient_emails TEXT)')
+        self.cur.execute('CREATE TABLE IF NOT EXISTS doctors (email TEXT PRIMARY KEY, pass TEXT, name TEXT, specialization TEXT, experience TEXT)')
         self.conn.commit()
 
     def create(self, name, email, hashed_password, specialization, experience):
-        self.cur.execute('INSERT INTO doctors VALUES (?,?,?,?,?,?)', (email, hashed_password, name, specialization, experience, ""))
+        self.cur.execute('INSERT INTO doctors VALUES (?,?,?,?,?)', (email, hashed_password, name, specialization, experience))
         self.conn.commit()
 
 
@@ -159,3 +159,18 @@ class Doctor:
                 status = 'inprogress'
                 self.cur.execute('UPDATE appointment SET status = ? WHERE patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
             self.conn.commit()
+
+    def viewpatientreports(self, pat_email, doc_email):
+        self.cur.execute('SELECT * FROM report WHERE patient_email=? AND doctor_email=?', (pat_email,doc_email))
+        reports = self.cur.fetchall()
+        results = []
+        if reports:
+            for report in reports:
+                result = {}
+                result['report_name'] = report[3]
+                result['file_path'] = report[4]
+                results.append(result)
+        
+        return results
+            
+            

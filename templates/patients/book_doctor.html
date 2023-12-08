@@ -26,6 +26,20 @@
                 <label for="time" class="form-label fs-5">Appointment Time</label>
                 <input type="time" class="form-control mb-2" id="time" name="time" required>
             </div>
+
+            <div class="col-md-8">
+                <label for="report" class="form-label fs-5">Share Existing Reports</label>
+                <div class="mb-2">
+                    {% for file in files %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="selected_reports" value="{{ file.report_name }}">
+                            <label class="form-check-label" for="report{{ file.report_name}}">
+                                {{ file.report_name }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
         
             <div class="col-md-8">
                 <label for="reason" class="form-label fs-5">Reason to Visit</label>
