@@ -205,6 +205,11 @@ def edit_appointment(doctor_email):
                 flash('Appointment updated successfully!', 'success')
             except sqlite3.Error as error:
                 flash('Appointment can\'t be updated. Try again!', 'failue')
+    else:
+        if 'auth' in session:
+            patient_email = session['auth']
+            patient_data = Patient().getinfo(patient_email)
+            patient_name = patient_data['name']
     
     return render_template('patients/edit_appointment.html', doctor_email=doctor_email, patient_name=patient_name)
     
