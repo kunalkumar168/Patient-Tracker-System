@@ -171,6 +171,8 @@ def book_doctor(doctor_email, doctor_name):
             except sqlite3.Error as error:
                 if 'UNIQUE constraint failed' in str(error):
                     flash('Appointment can\'t be booked. Try again!', 'failure')
+            except Exception as error:
+                flash(str(error), 'failure')
 
     files = []
     if 'auth' in session:
