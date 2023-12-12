@@ -148,11 +148,7 @@ def book_appointment():
 
 @app.route('/book_doctor/<string:doctor_email>/<string:doctor_name>', methods=['GET', 'POST'])
 def book_doctor(doctor_email, doctor_name):
-    print("working?")
-    print(doctor_email)
-    availability = Doctor().get_availability(doctor_email)
-    print(availability)
-    # what if it is empty
+
     if request.method == 'POST':
 
         if 'auth' in session:
@@ -181,10 +177,8 @@ def book_doctor(doctor_email, doctor_name):
     if 'auth' in session:
         patient_email = session['auth']
         files = Patient().getpatientreports(pat_email=patient_email)
-    for slot in availability:
-        print(slot)
-        print(slot[0])
-    return render_template('patients/book_doctor.html', doctor_email=doctor_email, availability=availability, doctor_name=doctor_name, files=files)
+
+    return render_template('patients/book_doctor.html', doctor_email=doctor_email, doctor_name=doctor_name, files=files)
 
 @app.route('/patient_prescription/<string:doctor_email>', methods=['GET'])
 def patient_prescription(doctor_email):
@@ -270,7 +264,6 @@ def delete_report(report_name):
 @app.route('/get_doctor_availability/<string:doctor_email>')
 def get_doctor_availability(doctor_email):
     # Fetch the availability from the database
-    # Example format: [('2023-04-01', '09:00', '11:00'), ('2023-04-01', '13:00', '15:00')]
     availability = Doctor().get_availability(doctor_email)
 
     # Convert to FullCalendar event format

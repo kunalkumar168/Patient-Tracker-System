@@ -50,19 +50,6 @@
             </div> 
 
             <div id='calendar'></div> 
-
-            <div class="col-md-4">
-                <h3>Doctor's Available Times</h3>
-                <ul class="list-group">
-                    {% for slot in availability %}
-                        <li class="list-group-item">
-                            {{ slot[0] }} - {{ slot[1] }} to {{ slot[2] }}
-                        </li>
-                    {% else %}
-                        <li class="list-group-item">No available times</li>
-                    {% endfor %}
-                </ul>
-            </div>
         
             <div class="col-md-8 d-flex justify-content-between">
                 <button type="submit" class="btn btn-primary btn-lg">Book</button>
@@ -93,7 +80,8 @@
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'timeGridWeek',
                 events: '/get_doctor_availability/{{ doctor_email }}',
-                eventColor: '#3788d8'
+                eventColor: '#3788d8',
+                height: 500
             });
             calendar.render();
         });
