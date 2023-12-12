@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from flask import *
 import bcrypt
 import sqlite3
@@ -147,7 +148,9 @@ def book_appointment():
 
 @app.route('/book_doctor/<string:doctor_email>/<string:doctor_name>', methods=['GET', 'POST'])
 def book_doctor(doctor_email, doctor_name):
+
     if request.method == 'POST':
+
         if 'auth' in session:
             patient_email = session['auth']
             date = request.form.get('date')
@@ -168,10 +171,14 @@ def book_doctor(doctor_email, doctor_name):
             except sqlite3.Error as error:
                 if 'UNIQUE constraint failed' in str(error):
                     flash('Appointment can\'t be booked. Try again!', 'failure')
+            except Exception as error:
+                flash(str(error), 'failure')
+
     files = []
     if 'auth' in session:
         patient_email = session['auth']
         files = Patient().getpatientreports(pat_email=patient_email)
+
     return render_template('patients/book_doctor.html', doctor_email=doctor_email, doctor_name=doctor_name, files=files)
 
 @app.route('/patient_prescription/<string:doctor_email>', methods=['GET'])
@@ -254,8 +261,35 @@ def delete_report(report_name):
             flash('Reports was not uploaded. Try again!', 'failue')
     
     return redirect(url_for('upload_reports'))
-        
 
+@app.route('/get_doctor_availability/<string:doctor_email>')
+def get_doctor_availability(doctor_email):
+    # Fetch the availability from the database
+    availability = Doctor().get_availability(doctor_email)
+    unavailable = Appointment().get_appointment_unavailable(doctor_email)
+
+    # Convert to FullCalendar event format
+    events = [
+        {
+            'title': 'Available',
+            'start': f"{date}T{start_time}",
+            'end': f"{date}T{end_time}",
+            'color': '#3788d8',
+        } for date, start_time, end_time in availability
+    ]
+
+    for date, time in unavailable:
+        start_datetime = datetime.strptime(f"{date}T{time}", "%Y-%m-%dT%H:%M")
+        end_datetime = start_datetime + timedelta(hours=1)   # Add one hour to the start time
+        events.append({
+            'title': 'Unavailable',
+            'start': start_datetime.strftime("%Y-%m-%dT%H:%M"),
+            'end': end_datetime.strftime("%Y-%m-%dT%H:%M"),
+            'color': '#ff0000',  # Red color for unavailable times
+            'rendering': 'background',
+        })
+
+    return jsonify(events)
 # # --------------------------------- Doctor Components -------------------------------------------
 
 
@@ -336,8 +370,25 @@ def pending_request(patient_email, action):
     
     return redirect(url_for('doctor_dashboard'))
 
+@app.route('/set_availability', methods=['GET', 'POST'])
+def set_availability():
+    if request.method == 'POST':
+        email = session['auth']
+        date = request.form['date']
+        start_time = request.form['start_time']
+        end_time = request.form['end_time']
+
+        doctor = Doctor()
+        if doctor.set_availability(email, date, start_time, end_time):
+            flash('Availability set successfully!', 'success')
+        else:
+            flash('Failed to set availability. Please try again.', 'error')
+
+        return redirect(url_for('set_availability'))
+
+    return render_template('doctors/set_availability.html')
 
 # # --------------------------------- Main Function -------------------------------------------
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

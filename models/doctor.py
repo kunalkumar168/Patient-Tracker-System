@@ -13,6 +13,7 @@ class Doctor:
         
     def setup_db(self):
         self.cur.execute('CREATE TABLE IF NOT EXISTS doctors (email TEXT PRIMARY KEY, pass TEXT, name TEXT, specialization TEXT, experience TEXT)')
+        self.cur.execute('CREATE TABLE IF NOT EXISTS doctor_availability (doctor_email TEXT,day TEXT, start_time TEXT, end_time TEXT, FOREIGN KEY (doctor_email) REFERENCES doctors(email))')
         self.conn.commit()
 
     def create(self, name, email, hashed_password, specialization, experience):
@@ -172,5 +173,26 @@ class Doctor:
                 results.append(result)
         
         return results
-            
-            
+
+    def set_availability(self, email, date, start_time, end_time):
+            try:
+                self.cur.execute('INSERT INTO doctor_availability (doctor_email, day, start_time, end_time) VALUES (?, ?, ?, ?)', (email, date, start_time, end_time))
+                self.conn.commit()
+                return True
+            except sqlite3.Error as e:
+                print("An error occurred:", e)
+                return False
+
+    def get_availability(self, email):
+        try:
+            self.cur.execute('SELECT day, start_time, end_time FROM doctor_availability WHERE doctor_email = ?', (email,))
+            availability = self.cur.fetchall()
+            return availability  # List of tuples (date, start_time, end_time)
+        except sqlite3.Error as e:
+            print("An error occurred:", e)
+            return []
+
+    def get_available_times_for_date(self, email, date):
+        self.cur.execute('SELECT start_time, end_time FROM doctor_availability WHERE doctor_email = ? AND date = ?', (email, date))
+        times = self.cur.fetchall()
+        return times  # Or format this as needed
