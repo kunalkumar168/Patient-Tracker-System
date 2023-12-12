@@ -1,3 +1,4 @@
+import datetime
 from flask import *
 import bcrypt
 import sqlite3
@@ -147,12 +148,18 @@ def book_appointment():
 
 @app.route('/book_doctor/<string:doctor_email>/<string:doctor_name>', methods=['GET', 'POST'])
 def book_doctor(doctor_email, doctor_name):
+    print("working?")
+    print(doctor_email)
+    availability = Doctor().get_availability(doctor_email)
+    print(availability)
     if request.method == 'POST':
+
         if 'auth' in session:
             patient_email = session['auth']
             date = request.form.get('date')
             time = request.form.get('time')
             reason = request.form.get('reason')
+
 
             selected_reports = request.form.getlist('selected_reports')
             if selected_reports:
@@ -168,11 +175,15 @@ def book_doctor(doctor_email, doctor_name):
             except sqlite3.Error as error:
                 if 'UNIQUE constraint failed' in str(error):
                     flash('Appointment can\'t be booked. Try again!', 'failure')
+
     files = []
     if 'auth' in session:
         patient_email = session['auth']
         files = Patient().getpatientreports(pat_email=patient_email)
-    return render_template('patients/book_doctor.html', doctor_email=doctor_email, doctor_name=doctor_name, files=files)
+    for slot in availability:
+        print(slot)
+        print(slot[0])
+    return render_template('patients/book_doctor.html', doctor_email=doctor_email, availability=availability, doctor_name=doctor_name, files=files)
 
 @app.route('/patient_prescription/<string:doctor_email>', methods=['GET'])
 def patient_prescription(doctor_email):
@@ -336,8 +347,25 @@ def pending_request(patient_email, action):
     
     return redirect(url_for('doctor_dashboard'))
 
+@app.route('/set_availability', methods=['GET', 'POST'])
+def set_availability():
+    if request.method == 'POST':
+        email = session['auth']
+        date = request.form['date']
+        start_time = request.form['start_time']
+        end_time = request.form['end_time']
+
+        doctor = Doctor()
+        if doctor.set_availability(email, date, start_time, end_time):
+            flash('Availability set successfully!', 'success')
+        else:
+            flash('Failed to set availability. Please try again.', 'error')
+
+        return redirect(url_for('set_availability'))
+
+    return render_template('doctors/set_availability.html')
 
 # # --------------------------------- Main Function -------------------------------------------
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

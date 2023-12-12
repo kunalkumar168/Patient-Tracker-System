@@ -22,3 +22,15 @@ class Appointment:
         apt_id = self.get_id()
         self.cur.execute('INSERT INTO appointment VALUES (?,?,?,?,?,?,?,?)', (apt_id, patient_email, doctor_email, date, time, reason, "", "started"))
         self.conn.commit()
+    
+    def book_appointment(self, doctor_email, patient_email, date, time):
+        # Check doctor's availability logic
+        # Assuming time is a datetime object
+        day = date.strftime("%A")  # Gets the weekday name
+        self.cur.execute('SELECT * FROM doctor_availability WHERE doctor_email = ? AND day = ? AND start_time <= ? AND end_time >= ?', (doctor_email, day, time, time))
+        if self.cur.fetchone():
+            # Doctor is available, proceed with booking logic
+            pass
+        else:
+            # Doctor is not available
+            pass
