@@ -19,6 +19,16 @@
                     <a href="{{ url_for('doctor_info', doctor_email=doctor_email) }}" class="btn btn-outline-secondary" type="button">View Profile</a>
                 </div>
             </div>
+
+            <div class="col-md-8">
+                <h4>Doctor's Available Times</h4>
+            </div>
+
+            <div id='calendar'></div> 
+
+            <div class="col-md-8">
+                <label for="date" class="form-label fs-5">------------------------------------------------------------------------------------------------------------</label>
+            </div>
         
             <div class="col-md-8">
                 <label for="date" class="form-label fs-5">Appointment Date</label>
@@ -48,8 +58,6 @@
                 <label for="reason" class="form-label fs-5">Reason to Visit</label>
                 <textarea class="form-control mb-2" id="reason" name="reason" rows="3"></textarea>
             </div> 
-
-            <div id='calendar'></div> 
         
             <div class="col-md-8 d-flex justify-content-between">
                 <button type="submit" class="btn btn-primary btn-lg">Book</button>
@@ -94,7 +102,7 @@
             $('#flash-messages .alert').alert('close');
         }, 5000);
     </script>
- -->
+
 
     <!-- <script>
         document.getElementById('backButton').addEventListener('click', function() {

@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 from flask import *
 import bcrypt
 import sqlite3
@@ -157,7 +157,6 @@ def book_doctor(doctor_email, doctor_name):
             time = request.form.get('time')
             reason = request.form.get('reason')
 
-
             selected_reports = request.form.getlist('selected_reports')
             if selected_reports:
                 try:
@@ -265,6 +264,7 @@ def delete_report(report_name):
 def get_doctor_availability(doctor_email):
     # Fetch the availability from the database
     availability = Doctor().get_availability(doctor_email)
+    unavailable = Appointment().get_appointment_unavailable(doctor_email)
 
     # Convert to FullCalendar event format
     events = [
@@ -275,6 +275,17 @@ def get_doctor_availability(doctor_email):
             'color': '#3788d8',
         } for date, start_time, end_time in availability
     ]
+
+    for date, time in unavailable:
+        start_datetime = datetime.strptime(f"{date}T{time}", "%Y-%m-%dT%H:%M")
+        end_datetime = start_datetime + timedelta(hours=1)   # Add one hour to the start time
+        events.append({
+            'title': 'Unavailable',
+            'start': start_datetime.strftime("%Y-%m-%dT%H:%M"),
+            'end': end_datetime.strftime("%Y-%m-%dT%H:%M"),
+            'color': '#ff0000',  # Red color for unavailable times
+            'rendering': 'background',
+        })
 
     return jsonify(events)
 # # --------------------------------- Doctor Components -------------------------------------------
