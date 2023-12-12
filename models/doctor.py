@@ -191,3 +191,8 @@ class Doctor:
         except sqlite3.Error as e:
             print("An error occurred:", e)
             return []
+
+    def get_available_times_for_date(self, email, date):
+        self.cur.execute('SELECT start_time, end_time FROM doctor_availability WHERE doctor_email = ? AND date = ?', (email, date))
+        times = self.cur.fetchall()
+        return times  # Or format this as needed

@@ -152,6 +152,7 @@ def book_doctor(doctor_email, doctor_name):
     print(doctor_email)
     availability = Doctor().get_availability(doctor_email)
     print(availability)
+    # what if it is empty
     if request.method == 'POST':
 
         if 'auth' in session:
@@ -265,8 +266,24 @@ def delete_report(report_name):
             flash('Reports was not uploaded. Try again!', 'failue')
     
     return redirect(url_for('upload_reports'))
-        
 
+@app.route('/get_doctor_availability/<string:doctor_email>')
+def get_doctor_availability(doctor_email):
+    # Fetch the availability from the database
+    # Example format: [('2023-04-01', '09:00', '11:00'), ('2023-04-01', '13:00', '15:00')]
+    availability = Doctor().get_availability(doctor_email)
+
+    # Convert to FullCalendar event format
+    events = [
+        {
+            'title': 'Available',
+            'start': f"{date}T{start_time}",
+            'end': f"{date}T{end_time}",
+            'color': '#3788d8',
+        } for date, start_time, end_time in availability
+    ]
+
+    return jsonify(events)
 # # --------------------------------- Doctor Components -------------------------------------------
 
 

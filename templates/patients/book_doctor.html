@@ -3,10 +3,13 @@
 {% block title %}Book Appointment{% endblock %}
 
 {% block content %}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
     <div class="container my-5">
         <div>
             <h1 class="display-4 fw-bold">Book Doctor</h1>
         </div>
+  
 
         <form method="post" action="{{ url_for('book_doctor', doctor_email=doctor_email, doctor_name=doctor_name) }}">
             <div class="col-md-8">
@@ -44,7 +47,9 @@
             <div class="col-md-8">
                 <label for="reason" class="form-label fs-5">Reason to Visit</label>
                 <textarea class="form-control mb-2" id="reason" name="reason" rows="3"></textarea>
-            </div>
+            </div> 
+
+            <div id='calendar'></div> 
 
             <div class="col-md-4">
                 <h3>Doctor's Available Times</h3>
@@ -66,6 +71,7 @@
             </div>
         </form>        
 
+
         <div id="flash-messages">
             {% for message in get_flashed_messages() %}
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -76,7 +82,22 @@
                 </div>
             {% endfor %}
         </div>
+
     </div>
+
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                events: '/get_doctor_availability/{{ doctor_email }}',
+                eventColor: '#3788d8'
+            });
+            calendar.render();
+        });
+    </script>
 
     <!-- Custom script to auto-close flash messages after a few seconds -->
     <script>
@@ -85,6 +106,7 @@
             $('#flash-messages .alert').alert('close');
         }, 5000);
     </script>
+ -->
 
     <!-- <script>
         document.getElementById('backButton').addEventListener('click', function() {
