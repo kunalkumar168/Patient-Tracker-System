@@ -280,7 +280,7 @@ def get_doctor_availability(doctor_email):
 
     for date, time in unavailable:
         start_datetime = datetime.strptime(f"{date}T{time}", "%Y-%m-%dT%H:%M")
-        end_datetime = start_datetime + timedelta(hours=1)   # Add one hour to the start time
+        end_datetime = start_datetime + timedelta(hours=1)   # Add one hour to the start timeN
         events.append({
             'title': 'Unavailable',
             'start': start_datetime.strftime("%Y-%m-%dT%H:%M"),
