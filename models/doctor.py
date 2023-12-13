@@ -157,9 +157,20 @@ class Doctor:
                 status = 'started'
                 self.cur.execute('DELETE from appointment WHERE status=? AND patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
             elif accept:
+                allappointments = self.getallappointments(doc_email)
+                date = ''
+                time = ''
+                print(allappointments)
+                for appointment in allappointments:
+                    if appointment['patient_email'] == pat_email and appointment['status'].lower() == 'started':
+                        print("nonworkg")
+                        date = datetime.strptime(appointment['date'], '%m/%d/%Y').strftime('%Y-%m-%d')
+                        time = datetime.strptime(appointment['time'], '%I:%M %p').strftime('%H:%M')
+
+                self.deletedoctoravailability(doc_email,date,time)
+                
                 status = 'inprogress'
-                self.deletedoctoravailability(doc_email, result[3], result[4])
-                self.cur.execute('UPDATE appointment SET status = ? WHERE patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
+                self.cur.execute('UPDATE appointment SET status = ? WHERE patient_email=? AND doctor_email=? AND STATUS!=?', (status, pat_email, doc_email, 'completed'))
             self.conn.commit()
 
     def viewpatientreports(self, pat_email, doc_email):
