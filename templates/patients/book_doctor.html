@@ -20,19 +20,20 @@
                 </div>
             </div>
 
-            <div class="col-md-8">
+            <!-- <div class="col-md-8">
                 <h4>Doctor's Available Times</h4>
-            </div>
+            </div> -->
 
-            <div id='calendar'></div> 
-
-            <div class="col-md-8">
-                <label for="date" class="form-label fs-5">------------------------------------------------------------------------------------------------------------</label>
-            </div>
+            <!-- <div id='calendar'></div>  -->
         
             <div class="col-md-8">
                 <label for="date" class="form-label fs-5">Appointment Date</label>
                 <input type="date" class="form-control mb-2" id="date" name="date" required>
+            </div>
+
+            <!-- Display available time slots based on the selected date -->
+            <div id="available-times" class="col-md-8 mt-3">
+                <!-- Available times will be dynamically populated here -->
             </div>
         
             <div class="col-md-8">
@@ -80,9 +81,7 @@
 
     </div>
 
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-
-    <script>
+    <!-- <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -93,7 +92,70 @@
             });
             calendar.render();
         });
+    </script> -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Handle change event on the date input
+            document.getElementById('date').addEventListener('input', function () {
+                var selectedDate = this.value;
+                var doctorEmail = "{{ doctor_email }}";
+                // Fetch available times based on the selected date from the Flask app
+                fetch(`/get_doctor_availability/${doctorEmail}?selected_date=${selectedDate}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Display the available times in the 'available-times' div
+                        displayAvailableTimes(data);
+                    });
+            });
+    
+            function displayAvailableTimes(availability) {
+                var availableTimesDiv = document.getElementById('available-times');
+                availableTimesDiv.innerHTML = '';
+
+                if (availability.length === 0) {
+                    // If no availability, display a message
+                    var notAvailableMessage = document.createElement('div');
+                    notAvailableMessage.className = 'text-danger';
+                    notAvailableMessage.style.fontSize = '22px';
+                    notAvailableMessage.textContent = 'Not Available. Select another date.';
+                    availableTimesDiv.appendChild(notAvailableMessage);
+                } else {
+                    // Display each available time in a box
+                    var availableSlotsText = document.createElement('div');
+                    availableSlotsText.className = 'text-success';
+                    availableSlotsText.style.fontSize = '22px'; // Set the font size to 18px
+                    availableSlotsText.textContent = 'Available Slots:';
+                    availableTimesDiv.appendChild(availableSlotsText);
+
+                    // Display each available time in a box with reduced width
+                    availability.forEach(function (timeSlot) {
+                        var startTime = formatTime(timeSlot.start_time);
+                        var endTime = formatTime(timeSlot.end_time);
+
+                        var timeSlotBox = document.createElement('div');
+                        timeSlotBox.className = 'border p-1 m-2';
+                        timeSlotBox.style.backgroundColor = 'lightgreen';
+                        timeSlotBox.style.width = '180px'; 
+                        timeSlotBox.style.textAlign = 'center';
+                        timeSlotBox.textContent = `${startTime} - ${endTime}`;
+                        availableTimesDiv.appendChild(timeSlotBox);
+                    });
+                }
+            }
+
+            function formatTime(time) {
+                // Format time to include AM/PM
+                var formattedTime = new Date('2022-01-01T' + time);
+                return formattedTime.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            }
+
+        });
     </script>
+    
+    
+    
+       
 
     <!-- Custom script to auto-close flash messages after a few seconds -->
     <script>

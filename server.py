@@ -4,7 +4,6 @@ import bcrypt
 import sqlite3
 import os
 from models.patient import Patient
-from models.medicine import Medicine
 from models.doctor import Doctor
 from models.appointments import Appointment
 from models.reports import ReportFile
@@ -26,7 +25,6 @@ with app.app_context():
     Patient().setup_db()
     Appointment().setup_db()
     Doctor().setup_db()
-    Medicine().setup_db()
     ReportFile().setup_db()
 
 # ---------------------------------- Common Section ------------------------------------------
@@ -171,9 +169,7 @@ def book_appointment():
 
 @app.route('/book_doctor/<string:doctor_email>/<string:doctor_name>', methods=['GET', 'POST'])
 def book_doctor(doctor_email, doctor_name):
-
     if request.method == 'POST':
-
         if 'auth' in session:
             patient_email = session['auth']
             date = request.form.get('date')
@@ -287,30 +283,18 @@ def delete_report(report_name):
 
 @app.route('/get_doctor_availability/<string:doctor_email>')
 def get_doctor_availability(doctor_email):
-    # Fetch the availability from the database
-    availability = Doctor().get_availability(doctor_email)
-    unavailable = Appointment().get_appointment_unavailable(doctor_email)
+    selected_date = request.args.get('selected_date')
+
+    # Fetch the availability from the database for the selected date
+    availability = Doctor().getavailabilityfordate(doctor_email, selected_date)
 
     # Convert to FullCalendar event format
     events = [
         {
-            'title': 'Available',
-            'start': f"{date}T{start_time}",
-            'end': f"{date}T{end_time}",
-            'color': '#3788d8',
+            'start_time': f"{start_time}",
+            'end_time': f"{end_time}",
         } for date, start_time, end_time in availability
     ]
-
-    for date, time in unavailable:
-        start_datetime = datetime.strptime(f"{date}T{time}", "%Y-%m-%dT%H:%M")
-        end_datetime = start_datetime + timedelta(hours=1)   # Add one hour to the start timeN
-        events.append({
-            'title': 'Unavailable',
-            'start': start_datetime.strftime("%Y-%m-%dT%H:%M"),
-            'end': end_datetime.strftime("%Y-%m-%dT%H:%M"),
-            'color': '#ff0000',  # Red color for unavailable times
-            'rendering': 'background',
-        })
 
     return jsonify(events)
 # # --------------------------------- Doctor Components -------------------------------------------
@@ -401,8 +385,8 @@ def set_availability():
         start_time = request.form['start_time']
         end_time = request.form['end_time']
 
-        doctor = Doctor()
-        if doctor.set_availability(email, date, start_time, end_time):
+        doctor = Doctor().setavailability(email, date, start_time, end_time)
+        if doctor:
             flash('Availability set successfully!', 'success')
         else:
             flash('Failed to set availability. Please try again.', 'error')

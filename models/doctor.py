@@ -151,13 +151,14 @@ class Doctor:
 
     def pendingrequest(self, pat_email, doc_email, accept=None, reject=None):
         self.cur.execute("SELECT * FROM appointment WHERE patient_email=? AND doctor_email=?", (pat_email, doc_email))
-        result = self.cur.fetchall()
+        result = self.cur.fetchone()
         if result:
             if reject:
                 status = 'started'
                 self.cur.execute('DELETE from appointment WHERE status=? AND patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
             elif accept:
                 status = 'inprogress'
+                self.deletedoctoravailability(doc_email, result[3], result[4])
                 self.cur.execute('UPDATE appointment SET status = ? WHERE patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
             self.conn.commit()
 
@@ -174,25 +175,25 @@ class Doctor:
         
         return results
 
-    def set_availability(self, email, date, start_time, end_time):
-            try:
-                self.cur.execute('INSERT INTO doctor_availability (doctor_email, day, start_time, end_time) VALUES (?, ?, ?, ?)', (email, date, start_time, end_time))
-                self.conn.commit()
-                return True
-            except sqlite3.Error as e:
-                print("An error occurred:", e)
-                return False
-
-    def get_availability(self, email):
+    def setavailability(self, email, date, start_time, end_time):
         try:
-            self.cur.execute('SELECT day, start_time, end_time FROM doctor_availability WHERE doctor_email = ?', (email,))
+            self.cur.execute('INSERT INTO doctor_availability (doctor_email, day, start_time, end_time) VALUES (?, ?, ?, ?)', (email, date, start_time, end_time))
+            self.conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print("An error occurred:", e)
+            return False
+        
+    def getavailabilityfordate(self, doctor_email, selected_date ):
+        try:
+            self.cur.execute('SELECT day, start_time, end_time FROM doctor_availability WHERE doctor_email=? AND day=?', (doctor_email,selected_date))
             availability = self.cur.fetchall()
-            return availability  # List of tuples (date, start_time, end_time)
+            return availability
         except sqlite3.Error as e:
             print("An error occurred:", e)
             return []
 
-    def get_available_times_for_date(self, email, date):
+    def getavailabletimesfordate(self, email, date):
         self.cur.execute('SELECT start_time, end_time FROM doctor_availability WHERE doctor_email = ? AND day = ?', (email, date))
         times = self.cur.fetchall()
         return times  # Or format this as needed
@@ -201,6 +202,6 @@ class Doctor:
         self.cur.execute('DELETE FROM doctors WHERE email=?', (doc_email,))
         self.conn.commit()
 
-    def delete_Doctor_availability(self, doctor_email, day, start_time, end_time):
-        self.cur.execute('DELETE FROM doctor_availability WHERE doctor_email=? and day=? and start_time=? and end_time=?', (doctor_email, day, start_time, end_time))
+    def deletedoctoravailability(self, doctor_email, day, start_time):
+        self.cur.execute('DELETE FROM doctor_availability WHERE doctor_email=? and day=? and start_time=?', (doctor_email, day, start_time))
         self.conn.commit()

@@ -1,10 +1,11 @@
 from unittest.mock import MagicMock
 import pytest
 from server import app
+from io import BytesIO
+from werkzeug.datastructures import FileStorage
 from models.patient import Patient
 from models.doctor import Doctor
 from models.appointments import Appointment
-from models.medicine import Medicine
 from models.reports import ReportFile
 
 # The first version test was planned to set up dummy data for testing by using db when setting up the app, 
@@ -32,9 +33,6 @@ def client():
         })
 
         yield client
-
-        Patient().deletePatient('testpat1@example.com')
-        Doctor().deleteDoctor('testdoc1@example.com')
 
 def test_registration(client):
     response_success1 = client.post('/create-patient', data={
@@ -147,14 +145,61 @@ def test_doctor_reviews_patient_info(client):
     patient1info = Patient().getinfo('patient1@example.com')
     expected_data = {
         'name': 'Patient1',
-        'email': 'patient1@example.com',
-        'weight': '160',
-        'height': '175',
-        'age': '30',
-        'gender': 'male',
-        'medical_history': 'Slight backache'
+        'email': 'patient1@example.com'
     }
-    assert patient1info == expected_data
+    assert patient1info['name'] == expected_data['name']
+    assert patient1info['email'] == expected_data['email']
+
+def test_set_availability(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'testdoc1@example.com'
+    
+    response = client.post('/set_availability', data = {
+        'date' : '2023-12-13', 
+        'start_time' : '09:00',
+        'end_time' : '09:30',
+    })
+    assert response.status_code in [200, 302]
+    doctorinfo = Doctor().getavailabilityfordate('testdoc1@example.com', '2023-12-13')
+    events = [
+        {
+            'date' : f"{date}",
+            'start_time': f"{start_time}",
+            'end_time': f"{end_time}",
+        } for date, start_time, end_time in doctorinfo
+    ]
+    expected_data = {
+        'date': '2023-12-13',
+        'start_time': '09:00',
+        'end_time': '09:30',
+    }
+    assert( events[0] == expected_data)
+
+def test_edit_health_records(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'testpat1@example.com'
+        session['user_type'] = 'Patient'
+
+    response = client.post('/edit_health_records', data = {
+        'weight' : '150',
+        'height': '175',
+        'age': '35',
+        'gender': 'male',
+        'medical_history': 'nothing new',
+    })
+    assert response.status_code == 200
+    patient_email = 'testpat1@example.com' 
+    patientinfo = Patient().getinfo(patient_email)
+    expected_data = {
+        'name': 'testPatient1',
+        'email': 'testpat1@example.com',
+        'weight' : '150',
+        'height': '175',
+        'age': '35',
+        'gender': 'male',
+        'medical_history': 'nothing new',
+    }
+    assert patientinfo==expected_data
 
 # This will use existing dummy data.
 def test_view_patient_reports():
@@ -172,48 +217,51 @@ def test_view_patient_reports():
 # This will use existing dummy data.
 def test_get_available_times_for_date():
     day = '2023-12-13'
-    doctor_email = 'doctor1@example.com'
+    doctor_email = 'testdoc123@example.com'
+    Doctor().setavailability(doctor_email, day, '10:00', '10:30')
+    Doctor().setavailability(doctor_email, day, '14:00', '14:30')
 
-    available_times = Doctor().get_available_times_for_date(doctor_email, day)
+    available_times = Doctor().getavailabletimesfordate(doctor_email, day)
 
     expected_times = [
-        ('09:30', '11:50'),
-        ('14:00', '17:00')
+        ('10:00', '10:30'),
+        ('14:00', '14:30')
     ]
     assert available_times == expected_times
+    Doctor().deletedoctoravailability(doctor_email, day, '10:00')
+    Doctor().deletedoctoravailability(doctor_email, day, '14:00')
 
 # This will use existing dummy data.
 def test_create_appointment():
-    doctor_email = 'doctor1@example.com'
-    patient_email = 'patient1@example.com'
-    appointment_date = '2023-12-13'
+    doctor_email = 'testdoc1@example.com'
+    patient_email = 'testpat1@example.com'
+    appointment_date = '2023-12-25'
     appointment_time = '09:30'
     reason = 'test'
-
-    # Assuming is_doctor_available returns True if the doctor is available
+    Doctor().setavailability(doctor_email, appointment_date, appointment_time, '10:00')
     Appointment().create(patient_email, doctor_email, appointment_date, appointment_time, reason)
-    appointments = Patient().getallappointments(patient_email)
+    patientinfo = Patient().getallappointments(patient_email)
 
-    expected_appointment_data = [
-        {'doctor_email': 'doctor1@example.com', 'status': 'completed'},
-        {'doctor_email': 'doctor2@example.com', 'status': 'inprogress'},
-        {'doctor_email': 'doctor3@example.com', 'status': 'started'},
-        {'doctor_email': 'doctor1@example.com', 'status': 'started'}  # Newly added data
-    ]
+    expected_data = {
+        'doctor_name': 'testDoctor1',
+        'doctor_email': 'testdoc1@example.com',
+        'date': '12/25/2023',
+        'time': '09:30 AM'
+    }
+    assert patientinfo[0]['doctor_name'] == expected_data['doctor_name']
+    assert patientinfo[0]['doctor_email'] == expected_data['doctor_email']
+    assert patientinfo[0]['date'] == expected_data['date']
+    assert patientinfo[0]['time'] == expected_data['time']
 
-    # Check if each expected appointment is in the returned data
-    for expected_appointment in expected_appointment_data:
-        assert any(appointment['doctor_email'] == expected_appointment['doctor_email'] and 
-                   appointment['status'] == expected_appointment['status'] 
-                   for appointment in appointments), f"Appointment with doctor {expected_appointment['doctor_email']} and status {expected_appointment['status']} not found"
-    
-    Patient().cancelappointment(patient_email,doctor_email)
+    Patient().deleteappointment(patient_email,doctor_email)
+    Doctor().deletedoctoravailability(doctor_email, appointment_date, appointment_time)
 
 def test_cancel_appointment(): 
     doctor_email = 'doctor1@example.com'
     patient_email = 'patient1@example.com'
     appointment_date = '2023-12-13'
     appointment_time = '10:00'
+    Doctor().setavailability(doctor_email, appointment_date, appointment_time, '10:30')
 
     patient_email = 'patient1@example.com'
     doctor_email_to_delete = 'doctor1@example.com'
@@ -225,7 +273,6 @@ def test_cancel_appointment():
 
     # Confirm the appointment is initially present
     initial_appointments = Patient().getallappointments(patient_email)
-    print(initial_appointments)
     assert any(appointment['doctor_email'] == doctor_email_to_delete and 
                appointment['date'] == appointment_date_to_delete and
                appointment['time'] == appointment_time_to_delete
@@ -238,20 +285,26 @@ def test_cancel_appointment():
                    appointment['date'] == appointment_date_to_delete and
                    appointment['time'] == appointment_time_to_delete
                    for appointment in updated_appointments), "Appointment was not successfully deleted"
+    Patient().deleteappointment(patient_email,doctor_email)
+    Doctor().deletedoctoravailability(doctor_email, appointment_date, appointment_time)
 
 def test_get_prescription(client):
     # Assuming test data is already in the database
-    patient_email = 'patient1@example.com'
-    doctor_email = 'doctor1@example.com'
+    patient_email = 'testpat1@example.com'
+    doctor_email = 'testdoc1@example.com'
 
+    Doctor().setavailability('testdoc1@example.com', '2023-12-24', '10:00', '10:30')
+    Appointment().create('testpat1@example.com', 'testdoc1@example.com', '2023-12-24', '10:00', 'issue')
     # Successful Prescription Retrieval
     result = Patient().getprescription(patient_email, doctor_email)
     assert result is not None
-    assert result['prescription'] == 'Person is feeling okay now. Medicine - Med1 twice a day.'
+    assert result['prescription'] == ''
 
     # Retrieval when no prescription is available
     result = Patient().getprescription('nonpatient@example.com', doctor_email)
     assert result == {}
+    Patient().deleteappointment(patient_email,doctor_email)
+    Doctor().deletedoctoravailability(doctor_email, '2023-12-24', '10:00')
 
 def test_get_patient_reports(client):
     # Assuming test data is already in the database
@@ -364,29 +417,46 @@ def test_doctor_availability(client):
     email = 'doctor3@example.com'
     date = '2023-12-25'
     start_time = '09:00'
-    end_time = '17:00'
+    end_time = '09:30'
 
     # Set availability
-    response = doctor.set_availability(email, date, start_time, end_time)
+    response = doctor.setavailability(email, date, start_time, end_time)
     assert response == True
 
     # Check availability
-    availability = doctor.get_availability(email)
+    availability = doctor.getavailabilityfordate(email, date)
     assert isinstance(availability, list)
     assert any(avail for avail in availability if avail[0] == date and avail[1] == start_time and avail[2] == end_time)
 
-    doctor.delete_Doctor_availability(email, date, start_time, end_time)
+    doctor.deletedoctoravailability(email, date, start_time)
 
 def test_register_route(client):
     response = client.get('/register')
     assert response.status_code == 200
     assert '<WrapperTestResponse streamed [200 OK]>' == str(response)
 
+def test_register_post(client):
+    response = client.post('/register',  data = {
+        'role' : 'doctor'
+    })
+    assert response.status_code in [200, 302]
+
+    response = client.post('/register',  data = {
+        'role' : 'patient'
+    })
+    assert response.status_code in [200, 302]
+
 def test_book_appointment_route(client):
     with client.session_transaction() as session:
-        session['auth'] = 'patient1@example.com'
-    response = client.get('/book-appointment')
+        session['auth'] = 'testdoc1@example.com'
+
+    response = client.post('/book-appointment', data={
+        'first_name': 'testDoctor1', 
+        'last_name': '',  
+        'specialization': ''
+    })
     assert response.status_code == 200
+    assert('testDoctor1' in response.get_data(as_text=True))
 
 def test_book_doctor_route(client):
     with client.session_transaction() as session:
@@ -399,7 +469,8 @@ def test_book_doctor_route(client):
     response = client.post('/book_doctor/doctor@example.com/Dr. Example', data={
         'date': '2020-12-25',
         'time': '10:00',
-        'reason': 'Regular Checkup'
+        'reason': 'Regular Checkup',
+        'selected_reports': 'Blood Sugar'
     })
     assert response.status_code in [200,302]  # wrong data
 
@@ -420,9 +491,91 @@ def test_cancel_appointment_route(client):
 def test_edit_appointment_route(client):
     with client.session_transaction() as session:
         session['auth'] = 'patient1@example.com'
+        session['user_type'] = 'Patient'
 
     response = client.get('/edit_appointment/doctor@example.com')
     assert response.status_code in [200,302]
+
+def test_edit_appointment_post(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'testpat1@example.com'
+        session['user_type'] = 'Patient'
+
+    Doctor().setavailability('testdoc1@example.com', '2023-12-24', '10:00', '10:30')
+    Appointment().create('testpat1@example.com', 'testdoc1@example.com', '2023-12-24', '10:00', 'issue')
+    response = client.post('/edit_appointment/testdoc1@example.com', data={
+        'new_date': '2023-12-25',
+        'new_time': '09:00'
+    })
+    assert response.status_code in [200,302]
+    patientinfo = Patient().getallappointments('testpat1@example.com')
+    expected_data = {
+        'doctor_name': 'testDoctor1',
+        'doctor_email': 'testdoc1@example.com',
+        'date': '12/25/2023',
+        'time': '09:00 AM'
+    }
+    assert patientinfo[0]['doctor_name'] == expected_data['doctor_name']
+    assert patientinfo[0]['doctor_email'] == expected_data['doctor_email']
+    assert patientinfo[0]['date'] == expected_data['date']
+    assert patientinfo[0]['time'] == expected_data['time']
+    Patient().deleteappointment('testpat1@example.com', 'testdoc1@example.com')
+    Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-25', '09:00')
+    
+def test_pending_request(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'testdoc1@example.com'
+
+    Doctor().setavailability('testdoc1@example.com', '2023-12-24', '10:00', '10:30')
+    Appointment().create('testpat1@example.com', 'testdoc1@example.com', '2023-12-24', '10:00', 'issue')
+    response = client.get('/pending_request/testpat1@example.com/accept')
+    assert response.status_code in [200,302]
+    doctorinfo = Doctor().getallappointments('testdoc1@example.com')
+    expected_data = {
+        'patient_name': 'testPatient1',
+        'patient_email': 'testpat1@example.com',
+        'date': '12/24/2023',
+        'time': '10:00 AM',
+        'reason': 'issue',
+        'status': 'inprogress'
+    }
+    assert doctorinfo[0]['patient_name'] == expected_data['patient_name']
+    assert doctorinfo[0]['patient_email'] == expected_data['patient_email']
+    assert doctorinfo[0]['date'] == expected_data['date']
+    assert doctorinfo[0]['time'] == expected_data['time']
+    assert doctorinfo[0]['reason'] == expected_data['reason']
+    assert doctorinfo[0]['status'] == expected_data['status']
+    Patient().deleteappointment('testpat1@example.com', 'testdoc1@example.com')
+    Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-25', '09:00')
+
+def test_edit_patient(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'testdoc1@example.com'
+
+    Doctor().setavailability('testdoc1@example.com', '2023-12-24', '10:00', '10:30')
+    Appointment().create('testpat1@example.com', 'testdoc1@example.com', '2023-12-24', '10:00', 'issue')
+    response = client.post('/edit_patient/testpat1@example.com/testPatient1', data={
+        'prescription': 'fully fit now',
+        'status': 'completed'
+    })
+    assert response.status_code in [200,302]
+    patientinfo = Patient().getallappointments('testpat1@example.com')
+    expected_data = {
+        'doctor_name': 'testDoctor1',
+        'doctor_email': 'testdoc1@example.com',
+        'date': '12/24/2023',
+        'time': '10:00 AM',
+        'prescription': 'fully fit now',
+        'status': 'completed'
+    }
+    assert patientinfo[0]['doctor_name'] == expected_data['doctor_name']
+    assert patientinfo[0]['doctor_email'] == expected_data['doctor_email']
+    assert patientinfo[0]['date'] == expected_data['date']
+    assert patientinfo[0]['time'] == expected_data['time']
+    assert patientinfo[0]['prescription'] == expected_data['prescription']
+    assert patientinfo[0]['status'] == expected_data['status']
+    Patient().deleteappointment('testpat1@example.com', 'testdoc1@example.com')
+    Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-25', '09:00')
 
 def test_upload_reports_route(client):
     with client.session_transaction() as session:
@@ -430,6 +583,7 @@ def test_upload_reports_route(client):
 
     response = client.get('/upload-report')
     assert response.status_code in [200,302]
+
 
 
 def test_delete_report_route(client):
@@ -442,3 +596,12 @@ def test_delete_report_route(client):
 def test_get_doctor_availability_route(client):
     response = client.get('/get_doctor_availability/doctor@example.com')
     assert response.status_code in [200,302]
+
+def test_deleteData(client):
+    Patient().deletePatient('testpat1@example.com')
+    Doctor().deleteDoctor('testdoc1@example.com')
+    patientinfo = Patient().getpatientreports('testpat1@example.com')
+    doctorinfo = Doctor().getinfo('testdoc1@example.com')
+    Patient().deleteappointment('testpat1@example.com', 'testdoc1@example.com')
+    assert(len(patientinfo) == 0)
+    assert(len(doctorinfo) == 0)

@@ -116,6 +116,10 @@ class Patient:
         self.cur.execute('DELETE FROM appointment WHERE status=? AND patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
         self.conn.commit()    
 
+    def deleteappointment(self, pat_email, doc_email):
+        self.cur.execute('DELETE FROM appointment WHERE patient_email=? AND doctor_email=?', (pat_email, doc_email))
+        self.conn.commit()  
+
     def getpatientreports(self, pat_email):
         self.cur.execute('SELECT * FROM report WHERE patient_email = ?', (pat_email,))
         patient_report = self.cur.fetchall()
