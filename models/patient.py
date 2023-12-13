@@ -147,4 +147,4 @@ class Patient:
     def deletePatient(self, pat_email):
         self.cur.execute('DELETE FROM patients WHERE email=?', (pat_email,))
         self.conn.commit()
-            
+

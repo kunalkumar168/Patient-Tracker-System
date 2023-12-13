@@ -101,6 +101,8 @@ def test_login(client):
     })
     assert response_failure2.status_code == 200
 
+
+
 def test_logout(client):
     with client.session_transaction() as session:
         session['auth'] = 'testpat1@example.com'
@@ -207,7 +209,6 @@ def test_create_appointment():
     
     Patient().cancelappointment(patient_email,doctor_email)
 
-
 def test_cancel_appointment(): 
     doctor_email = 'doctor1@example.com'
     patient_email = 'patient1@example.com'
@@ -238,4 +239,206 @@ def test_cancel_appointment():
                    appointment['time'] == appointment_time_to_delete
                    for appointment in updated_appointments), "Appointment was not successfully deleted"
 
+def test_get_prescription(client):
+    # Assuming test data is already in the database
+    patient_email = 'patient1@example.com'
+    doctor_email = 'doctor1@example.com'
 
+    # Successful Prescription Retrieval
+    result = Patient().getprescription(patient_email, doctor_email)
+    assert result is not None
+    assert result['prescription'] == 'Person is feeling okay now. Medicine - Med1 twice a day.'
+
+    # Retrieval when no prescription is available
+    result = Patient().getprescription('nonpatient@example.com', doctor_email)
+    assert result == {}
+
+def test_get_patient_reports(client):
+    # Assuming test data is already in the database
+    patient_email = 'patient1@example.com'
+
+    # When Reports are Available
+    reports = Patient().getpatientreports(patient_email)
+    assert len(reports) > 0
+    assert reports[0]['patient_email'] == patient_email
+
+    # When No Reports are Available
+    reports = Patient().getpatientreports('unknown_patient@example.com')
+    assert len(reports) == 0
+
+def test_share_reports_with_doctors(client):
+    # Assuming test data is already in the database
+    patient_email = 'patient1@example.com'
+    doctor_email = 'doctor1@example.com'
+    report_name = 'CBC(Complete Blood Count)'
+
+    # Successful Report Sharing
+    initial_report_count = len(Patient().getpatientreports(patient_email))
+    Patient().sharereportswithdoctors(patient_email, doctor_email, report_name)
+    updated_report_count = len(Patient().getpatientreports(patient_email))
+    assert updated_report_count == initial_report_count  # assuming sharing doesn't remove the report
+
+    # Attempt to Share Non-Existent Report
+    Patient().sharereportswithdoctors(patient_email, doctor_email, 'Non-existent Report')
+    # Check if there are no changes in the reports
+    assert len(Patient().getpatientreports(patient_email)) == updated_report_count
+
+def test_get_id(client):
+    # Assuming test data is already in the database
+    report_file = ReportFile()
+
+    # Scenario: Reports already exist
+    existing_max_id = report_file.get_id()
+    assert isinstance(existing_max_id, str)
+    assert existing_max_id.isdigit()
+
+def test_create_report(client):
+    report_file = ReportFile()
+    patient_email = 'patient1@example.com'
+    doctor_email = 'doctor1@example.com'
+    report_name = 'New Report'
+    file_path = '/path/to/new/report'
+
+    # Create a new report
+    report_file.create(patient_email, doctor_email, report_name, file_path)
+
+    Patient().deletereport(patient_email, report_name)
+
+def test_getdoclist(client):
+    doctor = Doctor()
+
+    # Assuming there are doctors in the database
+    doctor_list = doctor.getdoclist('John', 'Doe', 'Cardiology')
+    doctor_list = doctor.getdoclist('Doc', 'tor1', 'Internal Medicine')
+    doctor_list = doctor.getdoclist('Doc', 'Doe', 'Cardiology')
+    doctor_list = doctor.getdoclist('q', 'Doe', 'Cardiology')
+    doctor_list = doctor.getdoclist('Doc', 'pe', 'Cardiology')
+    doctor_list = doctor.getdoclist('Doc', 'Doe', 'none')
+    doctor_list = doctor.getdoclist('mm', 'm', 'none')
+    doctor_list = doctor.getdoclist('Doc', 'q', 'none')
+    doctor_list = doctor.getdoclist('q', 'do', 'none')
+    assert isinstance(doctor_list, list)
+
+def test_getallappointments(client):
+    doctor = Doctor()
+    doc_email = 'doctor1@example.com'
+
+    appointments = doctor.getallappointments(doc_email)
+    doctor.getinfo(doc_email)
+    assert isinstance(appointments, list)
+    for appointment in appointments:
+        assert 'patient_email' in appointment
+        assert 'patient_name' in appointment
+        assert 'date' in appointment
+        assert 'time' in appointment
+        assert 'reason' in appointment
+        assert 'prescription' in appointment
+        assert 'status' in appointment
+
+def test_editpatient(client):
+    doctor = Doctor()
+    doc_email = 'doctor2@example.com'
+    pat_email = 'patient1@example.com'
+    new_prescription = 'New Prescription'
+    new_status = 'Completed'
+
+    # Edit patient details
+    doctor.editpatient(pat_email, doc_email, new_prescription, new_status)
+
+    old_prescription = ''
+    old_status = 'inprogress'
+
+    doctor.editpatient(pat_email, doc_email, old_prescription, old_status)
+
+def test_pendingrequest(client):
+    doctor = Doctor()
+    doc_email = 'doctor1@example.com'
+    pat_email = 'patient3@example.com'
+
+    # Set an appointment to pending status
+    doctor.pendingrequest(pat_email, doc_email, accept=True)
+    doctor.pendingrequest(pat_email, doc_email, reject=True)
+
+def test_doctor_availability(client):
+    doctor = Doctor()
+    email = 'doctor3@example.com'
+    date = '2023-12-25'
+    start_time = '09:00'
+    end_time = '17:00'
+
+    # Set availability
+    response = doctor.set_availability(email, date, start_time, end_time)
+    assert response == True
+
+    # Check availability
+    availability = doctor.get_availability(email)
+    assert isinstance(availability, list)
+    assert any(avail for avail in availability if avail[0] == date and avail[1] == start_time and avail[2] == end_time)
+
+    doctor.delete_Doctor_availability(email, date, start_time, end_time)
+
+def test_register_route(client):
+    response = client.get('/register')
+    assert response.status_code == 200
+    assert '<WrapperTestResponse streamed [200 OK]>' == str(response)
+
+def test_book_appointment_route(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'patient1@example.com'
+    response = client.get('/book-appointment')
+    assert response.status_code == 200
+
+def test_book_doctor_route(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'patient1@example.com'
+
+    response = client.get('/book_doctor/doctor1@example.com/Dr. Example')
+    assert response.status_code in [200,302]
+
+    # Simulate POST request to book an appointment
+    response = client.post('/book_doctor/doctor@example.com/Dr. Example', data={
+        'date': '2020-12-25',
+        'time': '10:00',
+        'reason': 'Regular Checkup'
+    })
+    assert response.status_code in [200,302]  # wrong data
+
+def test_patient_prescription_route(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'patient1@example.com'
+
+    response = client.get('/patient_prescription/doctor1@example.com')
+    assert response.status_code in [200,302]
+
+def test_cancel_appointment_route(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'patient1@example.com'
+
+    response = client.get('/cancel_appointment/doctor@example.com/cancel')
+    assert response.status_code in [200,302]
+
+def test_edit_appointment_route(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'patient1@example.com'
+
+    response = client.get('/edit_appointment/doctor@example.com')
+    assert response.status_code in [200,302]
+
+def test_upload_reports_route(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'patient1@example.com'
+
+    response = client.get('/upload-report')
+    assert response.status_code in [200,302]
+
+
+def test_delete_report_route(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'patient1@example.com'
+
+    response = client.post('/delete-report/report.pdf')
+    assert response.status_code in [200,302] 
+
+def test_get_doctor_availability_route(client):
+    response = client.get('/get_doctor_availability/doctor@example.com')
+    assert response.status_code in [200,302]
