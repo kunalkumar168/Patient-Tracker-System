@@ -23,6 +23,7 @@ The functional requirement covered in this project are :
    ![Modify Treatment Plans](images/case3_4.png)
 
 5. As a doctor, I want to set my available hours and days so that patients can book appointments when I'm available. 
+   ![Available Hours](images/case5.png)
 
 6. As a doctor, I accept appointments requested by patients and meet with them to conduct consultations.
    ![Accept Appointments](images/case1_6.png)
@@ -42,6 +43,7 @@ The functional requirement covered in this project are :
 10. As a patient, I update my health status and information so that my doctor can check.
     ![Update Health Status](images/case10_1.png)
     ![Update Health Status](images/case10_2.png)
+    ![Update Health Status](images/case10_3.png)
 
 11. As a user, I want to sign up to the website as a doctor or patient.
     ![Sign Up](images/case11_1.png)
@@ -78,6 +80,9 @@ Generate coverage report :
 
 Or View it in HTML format (preferred) :
 ```coverage html```
+
+Test Coverage is present in :
+```htmlcov/index.html```
 
 
 # Technologies Used
