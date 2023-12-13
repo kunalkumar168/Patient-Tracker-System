@@ -36,8 +36,8 @@ class Appointment:
         new_start = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
         new_end = new_start + timedelta(hours=1)
 
-        for date, time in unavailable_times:
-            unavailable_start = datetime.strptime(f"{date}T{time}", "%Y-%m-%dT%H:%M")
+        for Undate, Untime in unavailable_times:
+            unavailable_start = datetime.strptime(f"{Undate}T{Untime}", "%Y-%m-%dT%H:%M")
             unavailable_end = end_datetime = unavailable_start + timedelta(hours=1) 
 
         if new_start <= unavailable_end and new_end >= unavailable_start:
