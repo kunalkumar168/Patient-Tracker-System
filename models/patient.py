@@ -148,3 +148,7 @@ class Patient:
         self.cur.execute('DELETE FROM patients WHERE email=?', (pat_email,))
         self.conn.commit()
 
+    def edit_health_records(self, email, new_weight, new_height, new_age, new_gender, new_medical_history):
+        self.cur.execute('UPDATE patients SET weight=?, height=?, age=?, gender=?, medical_history=? WHERE email=?',
+                        (new_weight, new_height, new_age, new_gender, new_medical_history, email))
+        self.conn.commit()

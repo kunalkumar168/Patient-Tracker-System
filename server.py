@@ -105,7 +105,9 @@ def patient_dashboard():
         return render_template('dashboard/patient_dashboard.html', patient_details=patient_details, appointments=appointments)
     else:
         return redirect(url_for('login'))
-    
+
+
+
 @app.route('/create-patient', methods=['GET', 'POST'])
 def register_patient():
     if request.method == 'POST':
@@ -131,6 +133,27 @@ def register_patient():
                 flash(f"User with email {email} created!", 'failure')
                 return redirect(url_for('register_patient'))
     return render_template('patients/register_patient.html')
+
+@app.route('/edit_health_records', methods=['GET', 'POST'])
+def edit_health_records():
+    if 'auth' in session and session['user_type'] == 'Patient':
+        if request.method == 'POST':
+            patient_email = session['auth']
+            new_weight = request.form.get('weight')
+            new_height = request.form.get('height')
+            new_age = request.form.get('age')
+            new_gender = request.form.get('gender')
+            new_medical_history = request.form.get('medical_history')
+
+            try:
+                Patient().edit_health_records(patient_email, new_weight, new_height, new_age, new_gender, new_medical_history)
+                flash('Health records updated successfully!', 'success')
+            except sqlite3.Error as error:
+                flash(f'Failed to update health records. Error: {str(error)}', 'failure')
+
+        return render_template('patients/edit_health_records.html')
+    else:
+        return redirect(url_for('login'))
 
 @app.route('/book-appointment', methods=['GET', 'POST'])
 def book_appointment():
