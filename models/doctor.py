@@ -196,3 +196,7 @@ class Doctor:
         self.cur.execute('SELECT start_time, end_time FROM doctor_availability WHERE doctor_email = ? AND date = ?', (email, date))
         times = self.cur.fetchall()
         return times  # Or format this as needed
+    
+    def deleteDoctor(self, doc_email):
+        self.cur.execute('DELETE FROM doctors WHERE email=?', (doc_email,))
+        self.conn.commit()

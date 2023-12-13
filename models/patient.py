@@ -18,7 +18,6 @@ class Patient:
         self.cur.execute('INSERT INTO patients VALUES (?,?,?,?,?,?,?,?)', (name, email, hashed_password, weight, height, age, gender, medical_history))
         self.conn.commit()
 
-
     def login(self, email, password):
         self.cur.execute('SELECT pass FROM patients WHERE email=(?)', (email,))
         hash_check = self.cur.fetchone()
@@ -112,7 +111,6 @@ class Patient:
         self.cur.execute('UPDATE appointment SET date = ?, time = ? WHERE status=? AND patient_email=? AND doctor_email=?', (date, time, status, pat_email, doc_email))
         self.conn.commit()
 
-        
     def cancelappointment(self, pat_email, doc_email):
         status = 'started'
         self.cur.execute('DELETE FROM appointment WHERE status=? AND patient_email=? AND doctor_email=?', (status, pat_email, doc_email))
@@ -144,5 +142,9 @@ class Patient:
 
     def deletereport(self, pat_email, report_name):
         self.cur.execute('DELETE FROM report WHERE patient_email=? AND report_name=?', (pat_email,report_name))
+        self.conn.commit()
+
+    def deletePatient(self, pat_email):
+        self.cur.execute('DELETE FROM patients WHERE email=?', (pat_email,))
         self.conn.commit()
             
