@@ -200,3 +200,7 @@ class Doctor:
     def deleteDoctor(self, doc_email):
         self.cur.execute('DELETE FROM doctors WHERE email=?', (doc_email,))
         self.conn.commit()
+
+    def delete_Doctor_availability(self, doctor_email, day, start_time, end_time):
+        self.cur.execute('DELETE FROM doctor_availability WHERE doctor_email=? and day=? and start_time=? and end_time=?', (doctor_email, day, start_time, end_time))
+        self.conn.commit()
