@@ -160,7 +160,6 @@ class Doctor:
                 allappointments = self.getallappointments(doc_email)
                 date = ''
                 time = ''
-                print(allappointments)
                 for appointment in allappointments:
                     if appointment['patient_email'] == pat_email and appointment['status'].lower() == 'started':
                         print("nonworkg")
