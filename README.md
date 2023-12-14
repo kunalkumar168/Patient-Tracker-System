@@ -73,7 +73,7 @@ Start the web app :
 ## Test Coverage
 ---------------------------------------
 Run tests with coverage :
-```coverage run -m pytest test_server.py```
+```coverage run -m pytest testing/test_server.py```
 
 Generate coverage report :
 ```coverage report -m```
@@ -94,6 +94,7 @@ Test Coverage is present in :
 * HTML
 * CSS
 * Jinja
+* Pytest
 
 
 # Collaborators
