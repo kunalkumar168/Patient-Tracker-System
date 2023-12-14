@@ -372,6 +372,40 @@ def test_getdoclist(client):
     doctor_list = doctor.getdoclist('q', 'do', 'none')
     assert isinstance(doctor_list, list)
 
+
+def test_getdoclist1(client):
+    # Assuming there are doctors in the database
+    doctor = Doctor()
+
+    result1 = doctor.getdoclist('John', 'Doe', 'Cardiology')
+    assert isinstance(result1, list)
+
+
+    result2 = doctor.getdoclist('Doc', 'tor1', '')
+    assert isinstance(result2, list)
+
+
+    result3 = doctor.getdoclist('Doc', '', 'Cardiology')
+    assert isinstance(result3, list)
+
+
+    result4 = doctor.getdoclist('', 'Doe', 'Cardiology')
+    assert isinstance(result4, list)
+
+
+    result5 = doctor.getdoclist('Doc', '', '')
+    assert isinstance(result5, list)
+
+    result6 = doctor.getdoclist('', 'Doe', '')
+    assert isinstance(result6, list)
+
+    result7 = doctor.getdoclist('', '', 'Cardiology')
+    assert isinstance(result7, list)
+
+    result8 = doctor.getdoclist('', '', '')
+    assert isinstance(result8, list)
+
+
 def test_getallappointments(client):
     doctor = Doctor()
     doc_email = 'doctor1@example.com'
