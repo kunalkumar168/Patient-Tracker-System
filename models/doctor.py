@@ -34,18 +34,6 @@ class Doctor:
             else:
                 return "WrongPass"
 
-
-    def addpatient(self, doc_email, pat_email):
-        self.cur.execute('SELECT patient_emails FROM doctors WHERE email=?', (doc_email,))
-        doc_data = self.cur.fetchone()
-
-        if doc_data:
-            patient_emails = json.loads(doc_data[0]) if doc_data[0] else []
-            patient_emails.append(pat_email)
-            self.cur.execute('UPDATE doctors SET patient_emails=? WHERE email=?', (json.dumps(patient_emails), doc_email))
-            self.conn.commit()
-            return "Success"
-
     def getdoclist(self, first_name, last_name, specialization):
         try:
             if first_name and last_name and specialization:
@@ -195,13 +183,9 @@ class Doctor:
             return False
         
     def getavailabilityfordate(self, doctor_email, selected_date ):
-        try:
-            self.cur.execute('SELECT day, start_time, end_time FROM doctor_availability WHERE doctor_email=? AND day=?', (doctor_email,selected_date))
-            availability = self.cur.fetchall()
-            return availability
-        except sqlite3.Error as e:
-            print("An error occurred:", e)
-            return []
+        self.cur.execute('SELECT day, start_time, end_time FROM doctor_availability WHERE doctor_email=? AND day=?', (doctor_email,selected_date))
+        availability = self.cur.fetchall()
+        return availability
 
     def getavailabletimesfordate(self, email, date):
         self.cur.execute('SELECT start_time, end_time FROM doctor_availability WHERE doctor_email = ? AND day = ?', (email, date))

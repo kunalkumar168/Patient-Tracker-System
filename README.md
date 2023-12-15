@@ -73,7 +73,7 @@ Start the web app :
 ## Test Coverage
 ---------------------------------------
 Run tests with coverage :
-```coverage run -m pytest testing/test_server.py```
+```coverage run -m pytest test_server.py```
 
 Generate coverage report :
 ```coverage report -m```
@@ -130,7 +130,7 @@ Test Coverage is present in :
 
 # Video Presentation
 ---------------------------------------
-<a href="https://www.youtube.com/watch?v=NbTXy1f2K1o?si=rkL0PlORG5PoARrs">
-  <img src="https://i.imgur.com/JKhsccQ.png" position="relative" height="200px"/>
+<a href="https://youtu.be/0jL7RjzliDg">
+  <img src="https://i.imgur.com/y5MqjBJ.png" position="relative" height="150px"/>
 </a>
 

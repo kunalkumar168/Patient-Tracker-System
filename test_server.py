@@ -136,16 +136,16 @@ def test_dashboard(client):
 # This will use existing dummy data.
 def test_doctor_reviews_patient_info(client):
     with client.session_transaction() as session:
-        session['auth'] = 'doctor1@example.com'
+        session['auth'] = 'testdoc1@example.com'
 
-    response = client.get('/patient_info/patient1@example.com')
+    response = client.get('/patient_info/testpat1@example.com')
     assert response.status_code == 200
     assert b"Patient Information" in response.data
 
-    patient1info = Patient().getinfo('patient1@example.com')
+    patient1info = Patient().getinfo('testpat1@example.com')
     expected_data = {
-        'name': 'Patient1',
-        'email': 'patient1@example.com'
+        'name': 'testPatient1',
+        'email': 'testpat1@example.com'
     }
     assert patient1info['name'] == expected_data['name']
     assert patient1info['email'] == expected_data['email']
@@ -174,6 +174,7 @@ def test_set_availability(client):
         'end_time': '09:30',
     }
     assert( events[0] == expected_data)
+    Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-13', '09:00')
 
 def test_edit_health_records(client):
     with client.session_transaction() as session:
@@ -203,21 +204,21 @@ def test_edit_health_records(client):
 
 # This will use existing dummy data.
 def test_view_patient_reports():
-    pat_email = 'patient1@example.com'
-    doc_email = 'doctor1@example.com'
+    pat_email = 'testpat1@example.com'
+    doc_email = 'testdoc1@example.com'
 
+    ReportFile().create(patient_email=pat_email, doctor_email=doc_email, report_name='mock_data', file_path='mock_path.png')
     expected_reports = [
-        {'report_name': 'CBC(Complete Blood Count)', 'file_path': './files/CBC-Test-Results.jpg'},
-        {'report_name': 'Blood Sugar', 'file_path': './files/Blood-Sugar-Report.jpg'}
+        {'report_name': 'mock_data', 'file_path': 'mock_path.png'},
     ]
     patient_reports = Doctor().viewpatientreports(pat_email, doc_email)
-
-    assert patient_reports == expected_reports
+    assert patient_reports[0] == expected_reports[0]
+    Patient().deletereport(pat_email=pat_email, report_name='mock_path.png')
 
 # This will use existing dummy data.
 def test_get_available_times_for_date():
     day = '2023-12-13'
-    doctor_email = 'testdoc123@example.com'
+    doctor_email = 'testdoc1@example.com'
     Doctor().setavailability(doctor_email, day, '10:00', '10:30')
     Doctor().setavailability(doctor_email, day, '14:00', '14:30')
 
@@ -227,7 +228,9 @@ def test_get_available_times_for_date():
         ('10:00', '10:30'),
         ('14:00', '14:30')
     ]
+    print(available_times, expected_times)
     assert available_times == expected_times
+
     Doctor().deletedoctoravailability(doctor_email, day, '10:00')
     Doctor().deletedoctoravailability(doctor_email, day, '14:00')
 
@@ -257,14 +260,14 @@ def test_create_appointment():
     Doctor().deletedoctoravailability(doctor_email, appointment_date, appointment_time)
 
 def test_cancel_appointment(): 
-    doctor_email = 'doctor1@example.com'
-    patient_email = 'patient1@example.com'
+    doctor_email = 'testdoc1@example.com'
+    patient_email = 'testpat1@example.com'
     appointment_date = '2023-12-13'
     appointment_time = '10:00'
     Doctor().setavailability(doctor_email, appointment_date, appointment_time, '10:30')
 
-    patient_email = 'patient1@example.com'
-    doctor_email_to_delete = 'doctor1@example.com'
+    patient_email = 'testpat1@example.com'
+    doctor_email_to_delete = 'testdoc1@example.com'
     appointment_date_to_delete = '12/13/2023'
     appointment_time_to_delete = '10:00 AM'
     reason = 'cancel test'
@@ -293,8 +296,8 @@ def test_get_prescription(client):
     patient_email = 'testpat1@example.com'
     doctor_email = 'testdoc1@example.com'
 
-    Doctor().setavailability('testdoc1@example.com', '2023-12-24', '10:00', '10:30')
-    Appointment().create('testpat1@example.com', 'testdoc1@example.com', '2023-12-24', '10:00', 'issue')
+    Doctor().setavailability(doctor_email, '2023-12-24', '10:00', '10:30')
+    Appointment().create(patient_email=patient_email, doctor_email=doctor_email, date='2023-12-24', time='10:00', reason='issue')
     # Successful Prescription Retrieval
     result = Patient().getprescription(patient_email, doctor_email)
     assert result is not None
@@ -308,7 +311,7 @@ def test_get_prescription(client):
 
 def test_get_patient_reports(client):
     # Assuming test data is already in the database
-    patient_email = 'patient1@example.com'
+    patient_email = 'testpat1@example.com'
 
     # When Reports are Available
     reports = Patient().getpatientreports(patient_email)
@@ -321,8 +324,8 @@ def test_get_patient_reports(client):
 
 def test_share_reports_with_doctors(client):
     # Assuming test data is already in the database
-    patient_email = 'patient1@example.com'
-    doctor_email = 'doctor1@example.com'
+    patient_email = 'testpat1@example.com'
+    doctor_email = 'testdoc1@example.com'
     report_name = 'CBC(Complete Blood Count)'
 
     # Successful Report Sharing
@@ -347,10 +350,10 @@ def test_get_id(client):
 
 def test_create_report(client):
     report_file = ReportFile()
-    patient_email = 'patient1@example.com'
-    doctor_email = 'doctor1@example.com'
-    report_name = 'New Report'
-    file_path = '/path/to/new/report'
+    patient_email = 'testpat1@example.com'
+    doctor_email = 'testdoc1@example.com'
+    report_name = 'mock_report'
+    file_path = 'mock_path.jpg'
 
     # Create a new report
     report_file.create(patient_email, doctor_email, report_name, file_path)
@@ -361,20 +364,26 @@ def test_getdoclist(client):
     doctor = Doctor()
 
     # Assuming there are doctors in the database
-    doctor_list = doctor.getdoclist('John', 'Doe', 'Cardiology')
-    doctor_list = doctor.getdoclist('Doc', 'tor1', 'Internal Medicine')
-    doctor_list = doctor.getdoclist('Doc', 'Doe', 'Cardiology')
-    doctor_list = doctor.getdoclist('q', 'Doe', 'Cardiology')
-    doctor_list = doctor.getdoclist('Doc', 'pe', 'Cardiology')
-    doctor_list = doctor.getdoclist('Doc', 'Doe', 'none')
-    doctor_list = doctor.getdoclist('mm', 'm', 'none')
-    doctor_list = doctor.getdoclist('Doc', 'q', 'none')
-    doctor_list = doctor.getdoclist('q', 'do', 'none')
+    doctor_list = doctor.getdoclist('testDoctor1', 'Last', 'Cardiology')
+    assert isinstance(doctor_list, list)
+    doctor_list = doctor.getdoclist('testDoctor1', None, 'Cardiology')
+    assert doctor_list[0]['name']=='testDoctor1'
+    doctor_list = doctor.getdoclist(None, 'Last', 'Cardiology')
+    assert isinstance(doctor_list, list)
+    doctor_list = doctor.getdoclist('testDoctor1', 'Last', None)
+    assert isinstance(doctor_list, list)
+    doctor_list = doctor.getdoclist('testDoctor1', None, None)
+    assert doctor_list[0]['name']=='testDoctor1'
+    doctor_list = doctor.getdoclist(None, 'last', None)
+    assert isinstance(doctor_list, list)
+    doctor_list = doctor.getdoclist(None, None, 'Cardiology')
+    assert isinstance(doctor_list, list)
+    doctor_list = doctor.getdoclist(None, None, None)
     assert isinstance(doctor_list, list)
 
 def test_getallappointments(client):
     doctor = Doctor()
-    doc_email = 'doctor1@example.com'
+    doc_email = 'testdoc1@example.com'
 
     appointments = doctor.getallappointments(doc_email)
     doctor.getinfo(doc_email)
@@ -390,8 +399,8 @@ def test_getallappointments(client):
 
 def test_editpatient(client):
     doctor = Doctor()
-    doc_email = 'doctor2@example.com'
-    pat_email = 'patient1@example.com'
+    doc_email = 'testdoc1@example.com'
+    pat_email = 'testpat1@example.com'
     new_prescription = 'New Prescription'
     new_status = 'Completed'
 
@@ -405,8 +414,8 @@ def test_editpatient(client):
 
 def test_pendingrequest(client):
     doctor = Doctor()
-    doc_email = 'doctor1@example.com'
-    pat_email = 'patient3@example.com'
+    doc_email = 'testdoc1@example.com'
+    pat_email = 'testpat1@example.com'
 
     # Set an appointment to pending status
     doctor.pendingrequest(pat_email, doc_email, accept=True)
@@ -414,8 +423,8 @@ def test_pendingrequest(client):
 
 def test_doctor_availability(client):
     doctor = Doctor()
-    email = 'doctor3@example.com'
-    date = '2023-12-25'
+    email = 'testdoc111@example.com'
+    date = '2023-12-26'
     start_time = '09:00'
     end_time = '09:30'
 
@@ -460,40 +469,42 @@ def test_book_appointment_route(client):
 
 def test_book_doctor_route(client):
     with client.session_transaction() as session:
-        session['auth'] = 'patient1@example.com'
+        session['auth'] = 'testpat1@example.com'
 
-    response = client.get('/book_doctor/doctor1@example.com/Dr. Example')
+    response = client.get('/book_doctor/testdoc1@example.com/testDoctor1')
     assert response.status_code in [200,302]
 
     # Simulate POST request to book an appointment
-    response = client.post('/book_doctor/doctor@example.com/Dr. Example', data={
+    ReportFile().create(patient_email='testpat1@example.com', doctor_email=None, report_name='mock_data', file_path='./files/mockpath.png')
+    response = client.post('/book_doctor/testdoc1@example.com/testDoctor1', data={
         'date': '2020-12-25',
         'time': '10:00',
-        'reason': 'Regular Checkup',
-        'selected_reports': 'Blood Sugar'
+        'reason': 'need to visit',
+        'selected_reports': 'mock_data'
     })
     assert response.status_code in [200,302]  # wrong data
+    Patient().deletereport(pat_email='testpat1@example.com', report_name='mock_data')
 
 def test_patient_prescription_route(client):
     with client.session_transaction() as session:
-        session['auth'] = 'patient1@example.com'
+        session['auth'] = 'testpat1@example.com'
 
-    response = client.get('/patient_prescription/doctor1@example.com')
+    response = client.get('/patient_prescription/testdoc1@example.com')
     assert response.status_code in [200,302]
 
 def test_cancel_appointment_route(client):
     with client.session_transaction() as session:
-        session['auth'] = 'patient1@example.com'
+        session['auth'] = 'testpat1@example.com'
 
-    response = client.get('/cancel_appointment/doctor@example.com/cancel')
+    response = client.get('/cancel_appointment/testdoc1@example.com/cancel')
     assert response.status_code in [200,302]
 
 def test_edit_appointment_route(client):
     with client.session_transaction() as session:
-        session['auth'] = 'patient1@example.com'
+        session['auth'] = 'testpat1@example.com'
         session['user_type'] = 'Patient'
 
-    response = client.get('/edit_appointment/doctor@example.com')
+    response = client.get('/edit_appointment/testdoc1@example.com')
     assert response.status_code in [200,302]
 
 def test_edit_appointment_post(client):
@@ -521,6 +532,7 @@ def test_edit_appointment_post(client):
     assert patientinfo[0]['time'] == expected_data['time']
     Patient().deleteappointment('testpat1@example.com', 'testdoc1@example.com')
     Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-25', '09:00')
+    Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-24', '10:00')
     
 def test_pending_request(client):
     with client.session_transaction() as session:
@@ -547,6 +559,7 @@ def test_pending_request(client):
     assert doctorinfo[0]['status'] == expected_data['status']
     Patient().deleteappointment('testpat1@example.com', 'testdoc1@example.com')
     Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-25', '09:00')
+    Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-24', '10:00')
 
 def test_edit_patient(client):
     with client.session_transaction() as session:
@@ -576,6 +589,7 @@ def test_edit_patient(client):
     assert patientinfo[0]['status'] == expected_data['status']
     Patient().deleteappointment('testpat1@example.com', 'testdoc1@example.com')
     Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-25', '09:00')
+    Doctor().deletedoctoravailability('testdoc1@example.com', '2023-12-24', '10:00')
 
 def test_upload_reports_route(client):
     with client.session_transaction() as session:
@@ -584,6 +598,21 @@ def test_upload_reports_route(client):
     response = client.get('/upload-report')
     assert response.status_code in [200,302]
 
+def test_serve_report(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'patient1@example.com'
+
+    ReportFile().create(patient_email='testpat1@example.com', doctor_email=None, report_name='mock_data', file_path='mockpath.png')
+    response = client.get('/serve-report/mockpath.png')
+    assert response.status_code in [404]
+    Patient().deletereport(pat_email='testpat1@example.com', report_name='mock_data')
+
+def test_doctor_info(client):
+    with client.session_transaction() as session:
+        session['auth'] = 'testpat1@example.com'
+
+    response = client.get('/doctor_info/testpat1@example.com')
+    assert response.status_code in [200]
 
 
 def test_delete_report_route(client):
@@ -594,7 +623,10 @@ def test_delete_report_route(client):
     assert response.status_code in [200,302] 
 
 def test_get_doctor_availability_route(client):
-    response = client.get('/get_doctor_availability/doctor@example.com')
+    response = client.get('/get_doctor_availability/testdoc1@example.com', data = {
+        'selected_date' : '2023-12-13'
+    })
+
     assert response.status_code in [200,302]
 
 def test_deleteData(client):
