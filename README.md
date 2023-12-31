@@ -1,4 +1,4 @@
-# Patient-Tracker-System
+# Introduction
 -------------------------------------
 The Patient Tracker System is an intuitive, web-based digital solution designed to transform patient care within healthcare facilities. By providing a seamless platform for healthcare providers to efficiently track patient records, schedule appointments and manage treatment plans, the system aims to streamline healthcare processes and improve patient care.
 
